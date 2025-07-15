@@ -20,7 +20,7 @@ st.sidebar.markdown("**🎨 Leyenda de colores:**  \n"
 
 
 # --- Definición de pestañas ---
-tab1, tab2 = st.tabs(["📋 Tabla", "📊 Dashboard"])
+tab1, tab2, tab3 = st.tabs(["📋 Tabla", "📊 Dashboard", "🤖 Análisis IA"])
 
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
@@ -202,6 +202,19 @@ if uploaded_file:
         )
         fig2.update_traces(texttemplate='%{text:.1f}', hovertemplate='CLP %{x:.1f} millones')
         st.plotly_chart(fig2, use_container_width=True)
+
+    with tab3:
+        st.subheader("🤖 Predicción de Cierre de Oportunidades")
+
+        hist_file = st.file_uploader("Cargar histórico completo (.xlsx)", type=["xlsx"], key="hist")
+        if hist_file:
+            df_hist_full = pd.read_excel(hist_file)
+
+            model_option = st.selectbox("Selecciona el modelo a aplicar", ["Random Forest (v1)"])
+
+            if model_option == "Random Forest (v1)":
+                st.success("Modelo de predicción aplicado. A continuación se mostrarán las oportunidades vivas evaluadas.")
+                # Aquí podrías conectar con la lógica ya definida en el notebook o generar predicciones dinámicas más adelante.
 
 else:
     st.info("Carga un archivo Excel para comenzar.")
