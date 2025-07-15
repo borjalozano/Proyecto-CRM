@@ -69,31 +69,6 @@ if uploaded_file:
     df = df[df.acuerdo_marco.str.lower() != "sí"]
 
     with tab1:
-        # --- RESUMEN GENERADO CON IA ---
-        import openai
-
-        st.subheader("🧠 Análisis generado por IA")
-
-        resumen = f"""
-Se han cargado {len(df_mostrar)} oportunidades.
-El importe total visible es de {df_mostrar['Importe'].str.replace('$','').str.replace('.','').astype(float).sum():,.0f} CLP.
-Hay {sum(df_mostrar['Fecha de Cierre'].dt.month == dt.datetime.today().month)} oportunidades con cierre este mes.
-El promedio de probabilidad declarada es de {pd.to_numeric(df_mostrar['Probabilidad'].str.replace('%','')).mean():.1f}%.
-"""
-
-        if "OPENAI_API_KEY" in st.secrets:
-            openai.api_key = st.secrets["OPENAI_API_KEY"]
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "Eres un asistente experto en análisis de oportunidades comerciales. Tu tarea es interpretar datos y sugerir insights estratégicos."},
-                    {"role": "user", "content": f"Con base en este resumen del pipeline: {resumen}, ¿qué observaciones clave destacarías?"}
-                ]
-            )
-            st.markdown(response["choices"][0]["message"]["content"])
-        else:
-            st.warning("No se ha configurado la API key de OpenAI. Agrega OPENAI_API_KEY a tus secretos.")
-
         # --- PANEL DE FILTROS ---
         with st.expander("📊 Filtros"):
             col1, col2, col3 = st.columns(3)
@@ -109,9 +84,6 @@ El promedio de probabilidad declarada es de {pd.to_numeric(df_mostrar['Probabili
                 df.responsable.isin(responsables) &
                 df.cliente.isin(clientes)
             ]
-
-        # --- DATATABLE ---
-        st.subheader("📋 Oportunidades filtradas")
 
         # Crear columna de título como hipervínculo
         df["título_link"] = df.apply(
@@ -152,6 +124,34 @@ El promedio de probabilidad declarada es de {pd.to_numeric(df_mostrar['Probabili
         df_mostrar["Probabilidad"] = df_mostrar["Probabilidad"].apply(lambda x: f"{x}%")
 
         df_mostrar = df_mostrar.sort_values(by="Fecha de Cierre", ascending=True)
+
+        # --- RESUMEN GENERADO CON IA ---
+        import openai
+
+        st.subheader("🧠 Análisis generado por IA")
+
+        resumen = f"""
+Se han cargado {len(df_mostrar)} oportunidades.
+El importe total visible es de {df_mostrar['Importe'].str.replace('$','').str.replace('.','').astype(float).sum():,.0f} CLP.
+Hay {sum(df_mostrar['Fecha de Cierre'].dt.month == dt.datetime.today().month)} oportunidades con cierre este mes.
+El promedio de probabilidad declarada es de {pd.to_numeric(df_mostrar['Probabilidad'].str.replace('%','')).mean():.1f}%.
+"""
+
+        if "OPENAI_API_KEY" in st.secrets:
+            openai.api_key = st.secrets["OPENAI_API_KEY"]
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "Eres un asistente experto en análisis de oportunidades comerciales. Tu tarea es interpretar datos y sugerir insights estratégicos."},
+                    {"role": "user", "content": f"Con base en este resumen del pipeline: {resumen}, ¿qué observaciones clave destacarías?"}
+                ]
+            )
+            st.markdown(response["choices"][0]["message"]["content"])
+        else:
+            st.warning("No se ha configurado la API key de OpenAI. Agrega OPENAI_API_KEY a tus secretos.")
+
+        # --- DATATABLE ---
+        st.subheader("📋 Oportunidades filtradas")
 
         # Mostrar como tabla HTML con enlaces y colorear filas
         def row_style(row):
