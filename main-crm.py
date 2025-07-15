@@ -103,6 +103,10 @@ if uploaded_file:
             "Fecha de Cierre", "Backlog 2025", "Backlog 2026", "Backlog 2027", "Backlog 2028"
         ]
 
+        # Formatear columnas monetarias como CLP sin decimales
+        for col in ["Importe", "Importe Servicio", "Backlog 2025", "Backlog 2026", "Backlog 2027", "Backlog 2028"]:
+            df_mostrar[col] = df_mostrar[col].apply(lambda x: f"${x:,.0f}".replace(",", "."))
+
         # Mostrar como tabla HTML con enlaces
         st.write(df_mostrar.to_html(escape=False, index=False), unsafe_allow_html=True)
 
