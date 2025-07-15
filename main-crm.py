@@ -272,6 +272,8 @@ if uploaded_file:
                 df_vivas = df_vivas.sort_values(by="Probabilidad de Ganar", ascending=False)
                 df_vivas["Probabilidad de Ganar"] = df_vivas["Probabilidad de Ganar"].apply(lambda x: f"{x:.0%}")
 
+                df_vivas["Importe"] = df_vivas["Importe"].apply(lambda x: f"${x:,.0f}".replace(",", "."))
+
                 st.markdown("### 📋 Predicciones sobre oportunidades vivas")
                 st.dataframe(df_vivas[[
                     "Estado Oportunidad", "Título", "Cliente", "Responsable", "Importe",
