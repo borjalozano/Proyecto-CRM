@@ -25,17 +25,6 @@ tab1, tab2, tab3 = st.tabs(["📋 Tabla", "📊 Dashboard", "🤖 Análisis IA"]
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
-    # --- RESUMEN EJECUTIVO EN SIDEBAR ---
-    total_opp = len(df)
-    total_importe = df["importe"].sum() if "importe" in df.columns else 0
-    vencidas = (df["fecha_cierre_oportunidad"] < dt.datetime.today()).sum() if "fecha_cierre_oportunidad" in df.columns else 0
-    cierre_mes = (df["fecha_cierre_oportunidad"].dt.month == dt.datetime.today().month).sum() if "fecha_cierre_oportunidad" in df.columns else 0
-
-    st.sidebar.markdown("### 🧾 Resumen Ejecutivo")
-    st.sidebar.markdown(f"- Total oportunidades: **{total_opp}**")
-    st.sidebar.markdown(f"- Importe total: **${total_importe:,.0f}**")
-    st.sidebar.markdown(f"- Ofertas vencidas: **{vencidas}**")
-    st.sidebar.markdown(f"- Cierre este mes: **{cierre_mes}**")
 
     # Limpiar y convertir columnas monetarias
     if "importe" in df.columns:
