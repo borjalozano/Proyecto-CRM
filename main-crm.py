@@ -30,12 +30,6 @@ if uploaded_file:
         df["importe"] = df["importe"].astype(str).str.replace(".", "", regex=False).str.replace(",", ".", regex=False)
         df["importe"] = pd.to_numeric(df["importe"], errors="coerce").fillna(0).round(0).astype(int)
 
-    if "importe_servicio" in df.columns:
-        df["importe_servicio"] = df["importe_servicio"].astype(str).str.replace("CLP", "", case=False)
-        df["importe_servicio"] = df["importe_servicio"].str.replace(r"[^\d,\.]", "", regex=True)
-        df["importe_servicio"] = df["importe_servicio"].str.replace(".", "", regex=False).str.replace(",", ".", regex=False)
-        df["importe_servicio"] = pd.to_numeric(df["importe_servicio"], errors="coerce").fillna(0).round(0).astype(int)
-
     for col in ["2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"]:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).round(0).astype(int)
@@ -43,7 +37,7 @@ if uploaded_file:
     # --- FILTRAR COLUMNAS RELEVANTES ---
     columnas = [
         "Estado Oportunidad", "Enlace a la Oportunidad", "Título", "Responsable", "Cliente", "Importe",
-        "Importe Servicio", "Margen Bruto", "Porcentaje de Margen Bruto", "Probabilidad", "Fecha de detección",
+        "Margen Bruto", "Porcentaje de Margen Bruto", "Probabilidad", "Fecha de detección",
         "Fecha Cierre Oportunidad", "Modificado En", "Modelo de Ejecuciones", "Fecha presentación propuesta",
         "Acuerdo Marco", "Servicio/Subservicio/XtechCore.", "Fecha de Inicio Estimada",
         "2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"
@@ -91,7 +85,7 @@ if uploaded_file:
 
         # Reordenar y renombrar columnas para la vista
         columnas_tabla = [
-            "cliente", "título_link", "importe", "importe_servicio", "probabilidad", "responsable",
+            "cliente", "título_link", "importe", "probabilidad", "responsable",
             "fecha_cierre_oportunidad", "backlog_2025", "backlog_2026", "backlog_2027", "backlog_2028"
         ]
         # Asegurar que los nombres internos de backlog coincidan con columnas renombradas
@@ -104,18 +98,18 @@ if uploaded_file:
 
         # Ajustar columnas_tabla para usar los nombres correctos
         columnas_tabla = [
-            "cliente", "título_link", "importe", "importe_servicio", "probabilidad", "responsable",
+            "cliente", "título_link", "importe", "probabilidad", "responsable",
             "fecha_cierre_oportunidad", "backlog_2025", "backlog_2026", "backlog_2027", "backlog_2028"
         ]
 
         df_mostrar = df[columnas_tabla].copy()
         df_mostrar.columns = [
-            "Cliente", "Título", "Importe", "Importe Servicio", "Probabilidad", "Responsable",
+            "Cliente", "Título", "Importe", "Probabilidad", "Responsable",
             "Fecha de Cierre", "Backlog 2025", "Backlog 2026", "Backlog 2027", "Backlog 2028"
         ]
 
         # Formatear columnas monetarias como CLP sin  decimales
-        for col in ["Importe", "Importe Servicio", "Backlog 2025", "Backlog 2026", "Backlog 2027", "Backlog 2028"]:
+        for col in ["Importe", "Backlog 2025", "Backlog 2026", "Backlog 2027", "Backlog 2028"]:
             df_mostrar[col] = pd.to_numeric(df_mostrar[col], errors="coerce").fillna(0).astype(int)
             df_mostrar[col] = df_mostrar[col].apply(lambda x: f"${x:,.0f}".replace(",", "."))
         df_mostrar["Probabilidad"] = pd.to_numeric(df_mostrar["Probabilidad"], errors="coerce").fillna(0).astype(int)
