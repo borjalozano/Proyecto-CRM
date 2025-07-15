@@ -117,21 +117,18 @@ if uploaded_file:
 
         df_mostrar = df_mostrar.sort_values(by="Fecha de Cierre", ascending=True)
 
-        # Mostrar como tabla con ordenamiento y sin índice
-        # El coloreo previo se conserva comentado para posible reactivación futura
-        # def row_style(row):
-        #     if pd.isnull(row["Fecha de Cierre"]):
-        #         return ''
-        #     elif row["Fecha de Cierre"] < dt.datetime.today():
-        #         return 'background-color: #f8d7da'  # Rojo claro
-        #     elif row["Fecha de Cierre"].month == dt.datetime.today().month and row["Fecha de Cierre"].year == dt.datetime.today().year:
-        #         return 'background-color: #fff3cd'  # Amarillo claro
-        #     else:
-        #         return 'background-color: #d4edda'  # Verde claro
-        # styled_table = df_mostrar.style.apply(lambda row: [row_style(row)] * len(row), axis=1)
-        # st.write(styled_table.to_html(escape=False, index=False), unsafe_allow_html=True)
-
-        st.dataframe(df_mostrar, use_container_width=True, hide_index=True)
+        # Mostrar como tabla HTML con enlaces y colorear filas
+        def row_style(row):
+            if pd.isnull(row["Fecha de Cierre"]):
+                return ''
+            elif row["Fecha de Cierre"] < dt.datetime.today():
+                return 'background-color: #f8d7da'  # Rojo claro
+            elif row["Fecha de Cierre"].month == dt.datetime.today().month and row["Fecha de Cierre"].year == dt.datetime.today().year:
+                return 'background-color: #fff3cd'  # Amarillo claro
+            else:
+                return 'background-color: #d4edda'  # Verde claro
+        styled_table = df_mostrar.style.apply(lambda row: [row_style(row)] * len(row), axis=1)
+        st.write(styled_table.to_html(escape=False, index=False), unsafe_allow_html=True)
 
     with tab2:
         with st.expander("📊 Filtros Dashboard"):
