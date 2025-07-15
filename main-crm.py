@@ -177,10 +177,15 @@ if uploaded_file:
         backlog_totales = [df["backlog_2025"].sum(), df["backlog_2026"].sum(), df["backlog_2027"].sum(), df["backlog_2028"].sum()]
         backlog_totales = [round(val / 1_000_000, 1) for val in backlog_totales]
 
-        x_labels = ["2025", "2026", "2027", "2028"]
+        import pandas as pd
+        pipeline_df = pd.DataFrame({
+            "Año": ["2025", "2026", "2027", "2028"],
+            "Millones CLP": backlog_totales
+        })
         fig = px.bar(
-            x=x_labels,
-            y=backlog_totales,
+            pipeline_df,
+            x="Año",
+            y="Millones CLP",
             labels={'x': 'Año', 'y': 'Millones CLP'},
             text=backlog_totales,
             title="Pipeline por año"
