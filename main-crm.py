@@ -126,7 +126,7 @@ if uploaded_file:
         df_mostrar = df_mostrar.sort_values(by="Fecha de Cierre", ascending=True)
 
         # --- RESUMEN GENERADO CON IA ---
-        import openai
+        from openai import OpenAI
 
         st.subheader("🧠 Análisis generado por IA")
 
@@ -138,15 +138,15 @@ El promedio de probabilidad declarada es de {pd.to_numeric(df_mostrar['Probabili
 """
 
         if "OPENAI_API_KEY" in st.secrets:
-            openai.api_key = st.secrets["OPENAI_API_KEY"]
-            response = openai.ChatCompletion.create(
+            client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "Eres un asistente experto en análisis de oportunidades comerciales. Tu tarea es interpretar datos y sugerir insights estratégicos."},
                     {"role": "user", "content": f"Con base en este resumen del pipeline: {resumen}, ¿qué observaciones clave destacarías?"}
                 ]
             )
-            st.markdown(response["choices"][0]["message"]["content"])
+            st.markdown(response.choices[0].message.content)
         else:
             st.warning("No se ha configurado la API key de OpenAI. Agrega OPENAI_API_KEY a tus secretos.")
 
