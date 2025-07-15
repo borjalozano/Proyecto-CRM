@@ -213,8 +213,64 @@ if uploaded_file:
             model_option = st.selectbox("Selecciona el modelo a aplicar", ["Random Forest (v1)"])
 
             if model_option == "Random Forest (v1)":
-                st.success("Modelo de predicción aplicado. A continuación se mostrarán las oportunidades vivas evaluadas.")
-                # Aquí podrías conectar con la lógica ya definida en el notebook o generar predicciones dinámicas más adelante.
+                # Preparar etiquetas
+                df_hist_full["estado_objetivo"] = df_hist_full["Estado Oportunidad"].str.lower().map({
+                    "ganada": 1,
+                    "descartada": 0,
+                    "perdida": 0
+                })
+                df_hist_modelo = df_hist_full.dropna(subset=["estado_objetivo"])
+
+                # Columnas a usar
+                columnas_modelo = [
+                    "Importe", "Probabilidad", "Responsable", "Cliente",
+                    "Tipo de Trarificación", "Modelo de Ejecuciones",
+                    "Servicio/Subservicio/XtechCore.",
+                    "2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"
+                ]
+                df_model = df_hist_modelo[columnas_modelo + ["estado_objetivo"]].copy()
+
+                # Limpiar numéricos
+                for col in ["Importe", "2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"]:
+                    df_model[col] = pd.to_numeric(df_model[col], errors="coerce").fillna(0)
+
+                # Codificar texto
+                from sklearn.preprocessing import LabelEncoder
+                label_cols = ["Responsable", "Cliente", "Tipo de Trarificación", "Modelo de Ejecuciones", "Servicio/Subservicio/XtechCore."]
+                encoders = {}
+                for col in label_cols:
+                    enc = LabelEncoder()
+                    df_model[col] = enc.fit_transform(df_model[col].astype(str))
+                    encoders[col] = enc
+
+                # Entrenar modelo
+                from sklearn.ensemble import RandomForestClassifier
+                X = df_model.drop("estado_objetivo", axis=1)
+                y = df_model["estado_objetivo"]
+                model = RandomForestClassifier(n_estimators=100, random_state=42)
+                model.fit(X, y)
+
+                # Aplicar a oportunidades vivas
+                estados_excluir = ["ganada", "descartada", "perdida"]
+                df_vivas = df_hist_full[~df_hist_full["Estado Oportunidad"].str.lower().isin(estados_excluir)].copy()
+                df_vivas_model = df_vivas[columnas_modelo].copy()
+
+                for col in ["Importe", "2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"]:
+                    df_vivas_model[col] = pd.to_numeric(df_vivas_model[col], errors="coerce").fillna(0)
+
+                for col in label_cols:
+                    df_vivas_model[col] = df_vivas_model[col].astype(str)
+                    df_vivas_model[col] = df_vivas_model[col].apply(lambda x: encoders[col].transform([x])[0] if x in encoders[col].classes_ else -1)
+
+                df_vivas["Predicción"] = model.predict(df_vivas_model)
+                df_vivas["Probabilidad de Ganar"] = model.predict_proba(df_vivas_model)[:, 1]
+
+                st.markdown("### 📋 Predicciones sobre oportunidades vivas")
+                st.dataframe(df_vivas[[
+                    "Estado Oportunidad", "Título", "Cliente", "Responsable", "Importe",
+                    "Probabilidad", "Fecha Cierre Oportunidad",
+                    "Predicción", "Probabilidad de Ganar"
+                ]], use_container_width=True)
 
 else:
     st.info("Carga un archivo Excel para comenzar.")
