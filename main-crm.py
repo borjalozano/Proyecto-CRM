@@ -122,62 +122,7 @@ if uploaded_file:
 
         df_mostrar = df_mostrar.sort_values(by="Fecha de Cierre", ascending=True)
 
-        import streamlit.components.v1 as components
-        import uuid
-
-        # Aplicar colores con estilos inline directamente sobre el DataFrame HTML
-        def color_row(row):
-            color = ''
-            if pd.isnull(row["Fecha de Cierre"]):
-                color = ''
-            elif row["Fecha de Cierre"] < dt.datetime.today():
-                color = 'background-color: #f8d7da'
-            elif row["Fecha de Cierre"].month == dt.datetime.today().month and row["Fecha de Cierre"].year == dt.datetime.today().year:
-                color = 'background-color: #fff3cd'
-            else:
-                color = 'background-color: #d4edda'
-            return [color] * len(row)
-
-        styled = df_mostrar.style.apply(color_row, axis=1)
-        table_id = "dataframe-" + str(uuid.uuid4())
-        html = f"""
-<style>
-    table#{table_id} {{
-        border-collapse: collapse;
-        width: 100%;
-        font-family: Arial, sans-serif;
-    }}
-    table#{table_id} thead {{
-        background-color: #f0f2f6;
-        font-weight: bold;
-    }}
-    table#{table_id} th, table#{table_id} td {{
-        padding: 8px 12px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-    }}
-</style>
-""" + styled.to_html(escape=False, index=False, table_id=table_id) + f"""
-<script>
-  const table = document.getElementById('{table_id}');
-  if (table) {{
-    const headers = table.querySelectorAll('thead th');
-    headers.forEach((th, i) => {{
-      th.style.cursor = 'pointer';
-      th.addEventListener('click', () => {{
-        const rows = Array.from(table.querySelectorAll('tbody tr'));
-        const sorted = rows.sort((a, b) => {{
-          const tdA = a.children[i].innerText;
-          const tdB = b.children[i].innerText;
-          return tdA.localeCompare(tdB, undefined, {{ numeric: true }});
-        }});
-        rows.forEach(row => table.querySelector('tbody').appendChild(row));
-      }});
-    }});
-  }}
-</script>
-"""
-        components.html(html, height=600, scrolling=True)
+        st.dataframe(df_mostrar, use_container_width=True, hide_index=True)
 
     with tab2:
         with st.expander("📊 Filtros Dashboard"):
