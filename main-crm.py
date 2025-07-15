@@ -251,11 +251,20 @@ if uploaded_file:
             })
             df_hist_modelo = df_hist_full.dropna(subset=["estado_objetivo"])
 
+            # Historial por responsable
+            win_por_responsable = df_hist_modelo[df_hist_modelo["estado_objetivo"] == 1]["Responsable"].value_counts(normalize=True)
+            df_hist_modelo["ganadas_por_responsable"] = df_hist_modelo["Responsable"].map(win_por_responsable).fillna(0)
+
+            # Historial por cliente
+            win_por_cliente = df_hist_modelo[df_hist_modelo["estado_objetivo"] == 1]["Cliente"].value_counts(normalize=True)
+            df_hist_modelo["ganadas_por_cliente"] = df_hist_modelo["Cliente"].map(win_por_cliente).fillna(0)
+
             # Columnas a usar
             columnas_modelo = [
                 "Importe", "Probabilidad", "Responsable", "Cliente",
                 "Tipo de Trarificación", "Modelo de Ejecuciones",
-                "Servicio/Subservicio/XtechCore.",
+                "Servicio/Subservicio/XtechCore.", "Estado Oportunidad",
+                "ganadas_por_responsable", "ganadas_por_cliente",
                 "2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"
             ]
             df_model = df_hist_modelo[columnas_modelo + ["estado_objetivo"]].copy()
@@ -266,7 +275,11 @@ if uploaded_file:
 
             # Codificar texto
             from sklearn.preprocessing import LabelEncoder
-            label_cols = ["Responsable", "Cliente", "Tipo de Trarificación", "Modelo de Ejecuciones", "Servicio/Subservicio/XtechCore."]
+            label_cols = [
+                "Responsable", "Cliente", "Tipo de Trarificación",
+                "Modelo de Ejecuciones", "Servicio/Subservicio/XtechCore.",
+                "Estado Oportunidad"
+            ]
             encoders = {}
             for col in label_cols:
                 enc = LabelEncoder()
