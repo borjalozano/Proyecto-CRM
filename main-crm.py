@@ -19,10 +19,18 @@ if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
     # Limpiar y convertir columnas monetarias
-    for col in ["importe", "importe_servicio", "2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"]:
+    if "importe" in df.columns:
+        df["importe"] = df["importe"].astype(str).str.replace(".", "", regex=False).str.replace(",", ".", regex=False)
+        df["importe"] = pd.to_numeric(df["importe"], errors="coerce").fillna(0).round(0).astype(int)
+
+    if "importe_servicio" in df.columns:
+        df["importe_servicio"] = df["importe_servicio"].astype(str).str.replace("CLP", "", case=False)
+        df["importe_servicio"] = df["importe_servicio"].str.replace(".", "", regex=False).str.replace(",", ".", regex=False)
+        df["importe_servicio"] = pd.to_numeric(df["importe_servicio"], errors="coerce").fillna(0).round(0).astype(int)
+
+    for col in ["2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"]:
         if col in df.columns:
-            df[col] = df[col].astype(str).str.replace(".", "", regex=False).str.replace(",", ".", regex=False)
-            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).round(0).astype(int)
 
     # --- FILTRAR COLUMNAS RELEVANTES ---
     columnas = [
