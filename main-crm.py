@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 st.set_page_config(page_title="CRM Semanal", layout="wide")
 
 st.title("🔍 Revisión Semanal del Pipeline CRM")
+st.image("Logo Babel Horizontal (1).jpg", width=250)
 
 # --- CARGA DEL ARCHIVO EXCEL ---
 st.sidebar.header("📤 Carga de Export")
@@ -25,6 +26,7 @@ if uploaded_file:
 
     if "importe_servicio" in df.columns:
         df["importe_servicio"] = df["importe_servicio"].astype(str).str.replace("CLP", "", case=False)
+        df["importe_servicio"] = df["importe_servicio"].str.replace(r"[^\d,]", "", regex=True)
         df["importe_servicio"] = df["importe_servicio"].str.replace(".", "", regex=False).str.replace(",", ".", regex=False)
         df["importe_servicio"] = pd.to_numeric(df["importe_servicio"], errors="coerce").fillna(0).round(0).astype(int)
 
@@ -108,8 +110,16 @@ if uploaded_file:
             df_mostrar[col] = pd.to_numeric(df_mostrar[col], errors="coerce").fillna(0).astype(int)
             df_mostrar[col] = df_mostrar[col].apply(lambda x: f"${x:,.0f}".replace(",", "."))
 
-        # Mostrar como tabla HTML con enlaces
-        st.write(df_mostrar.to_html(escape=False, index=False), unsafe_allow_html=True)
+        # Mostrar como tabla HTML con enlaces y colorear filas
+        def row_style(row):
+            if row["Fecha de Cierre"].month == dt.datetime.today().month and row["Fecha de Cierre"].year == dt.datetime.today().year:
+                return 'background-color: #fff3cd'  # Naranja claro
+            elif row["Fecha de Cierre"] < dt.datetime.today():
+                return 'background-color: #f8d7da'  # Rojo claro
+            else:
+                return ''
+        styled_table = df_mostrar.style.apply(lambda row: [row_style(row)] * len(row), axis=1)
+        st.write(styled_table.to_html(escape=False, index=False), unsafe_allow_html=True)
 
     with tab2:
         # --- INDICADORES Y GRÁFICOS ---
