@@ -1,0 +1,8 @@
+streamlit
+pandas
+openpyxl
+openai
+fpdf
+PyMuPDF
+yagmail
+plotly
