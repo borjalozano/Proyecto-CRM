@@ -27,8 +27,8 @@ if uploaded_file:
 
     if "importe_servicio" in df.columns:
         df["importe_servicio"] = df["importe_servicio"].astype(str).str.replace("CLP", "", case=False)
-        df["importe_servicio"] = df["importe_servicio"].str.replace(r"[^\d,\.]", "", regex=True)
-        df["importe_servicio"] = df["importe_servicio"].str.replace(".", "", regex=False).str.replace(",", ".", regex=False)
+        df["importe_servicio"] = df["importe_servicio"].str.replace(".", "", regex=False)
+        df["importe_servicio"] = df["importe_servicio"].str.replace(",", ".", regex=False)
         df["importe_servicio"] = pd.to_numeric(df["importe_servicio"], errors="coerce").fillna(0).round(0).astype(int)
 
     for col in ["2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"]:
@@ -122,18 +122,46 @@ if uploaded_file:
 
         df_mostrar = df_mostrar.sort_values(by="Fecha de Cierre", ascending=True)
 
-        # Mostrar como tabla HTML con enlaces y colorear filas
-        def row_style(row):
+        import streamlit.components.v1 as components
+        import uuid
+
+        # Aplicar colores con estilos inline directamente sobre el DataFrame HTML
+        def color_row(row):
+            color = ''
             if pd.isnull(row["Fecha de Cierre"]):
-                return ''
+                color = ''
             elif row["Fecha de Cierre"] < dt.datetime.today():
-                return 'background-color: #f8d7da'  # Rojo claro
+                color = 'background-color: #f8d7da'
             elif row["Fecha de Cierre"].month == dt.datetime.today().month and row["Fecha de Cierre"].year == dt.datetime.today().year:
-                return 'background-color: #fff3cd'  # Amarillo claro
+                color = 'background-color: #fff3cd'
             else:
-                return 'background-color: #d4edda'  # Verde claro
-        styled_table = df_mostrar.style.apply(lambda row: [row_style(row)] * len(row), axis=1)
-        st.write(styled_table.to_html(escape=False, index=False), unsafe_allow_html=True)
+                color = 'background-color: #d4edda'
+            return [color] * len(row)
+
+        styled = df_mostrar.style.apply(color_row, axis=1)
+        table_id = "dataframe-" + str(uuid.uuid4())
+        html = styled.to_html(escape=False, index=False, table_id=table_id)
+        html += f"""
+        <script>
+          const table = document.getElementById('{table_id}');
+          if (table) {{
+            const headers = table.querySelectorAll('thead th');
+            headers.forEach((th, i) => {{
+              th.style.cursor = 'pointer';
+              th.addEventListener('click', () => {{
+                const rows = Array.from(table.querySelectorAll('tbody tr'));
+                const sorted = rows.sort((a, b) => {{
+                  const tdA = a.children[i].innerText;
+                  const tdB = b.children[i].innerText;
+                  return tdA.localeCompare(tdB, undefined, {{ numeric: true }});
+                }});
+                rows.forEach(row => table.querySelector('tbody').appendChild(row));
+              }});
+            }});
+          }}
+        </script>
+        """
+        components.html(html, height=600, scrolling=True)
 
     with tab2:
         with st.expander("📊 Filtros Dashboard"):
