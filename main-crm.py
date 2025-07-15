@@ -127,11 +127,11 @@ if uploaded_file:
         with st.expander("📊 Filtros Dashboard"):
             col1, col2, col3 = st.columns(3)
             with col1:
-                estado_d = st.multiselect("Estado", df.estado_oportunidad.unique(), default=df.estado_oportunidad.unique())
+                estado_d = st.multiselect("Estado", df.estado_oportunidad.unique(), default=df.estado_oportunidad.unique(), key="estado_dashboard")
             with col2:
-                responsables_d = st.multiselect("Responsable", df.responsable.unique(), default=df.responsable.unique())
+                responsables_d = st.multiselect("Responsable", df.responsable.unique(), default=df.responsable.unique(), key="responsable_dashboard")
             with col3:
-                clientes_d = st.multiselect("Cliente", df.cliente.unique(), default=df.cliente.unique())
+                clientes_d = st.multiselect("Cliente", df.cliente.unique(), default=df.cliente.unique(), key="cliente_dashboard")
 
             df = df[
                 df.estado_oportunidad.isin(estado_d) &
