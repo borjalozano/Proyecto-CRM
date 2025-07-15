@@ -373,6 +373,13 @@ if uploaded_file:
                         for _, row in top_5.iterrows()
                     )
 
+                    # Análisis adicional por cliente
+                    top_clientes_prob = df_vivas[df_vivas["Predicción"] == 1]["Cliente"].value_counts().head(5)
+                    resumen_clientes = "\n".join(
+                        f"- {cliente}: {count} oportunidades ganadas predichas"
+                        for cliente, count in top_clientes_prob.items()
+                    )
+
                     top_clientes = top_5["Cliente"].value_counts().idxmax() if not top_5.empty else "N/A"
                     top_responsables = top_5["Responsable"].value_counts().idxmax() if not top_5.empty else "N/A"
 
@@ -385,6 +392,8 @@ Las 5 oportunidades más prometedoras según el modelo son:
 {resumen_top}
 
 📌 Observación: El cliente más frecuente entre estas oportunidades es **{top_clientes}**, y el responsable con más presencia es **{top_responsables}**.
+\n📊 Clientes destacados con más oportunidades ganadas según el modelo:
+{resumen_clientes}
 """
 
                     if "OPENAI_API_KEY" in st.secrets:
