@@ -142,42 +142,20 @@ if uploaded_file:
         # --- DATATABLE ---
         st.subheader("📋 Oportunidades filtradas")
 
-        from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
-
-        # Agregar columna de enlace ya creada como "Título"
-        df_mostrar["Título"] = df["título_link"]
-
-        # Convertir fecha correctamente por si acaso
-        df_mostrar["Fecha de Cierre"] = pd.to_datetime(df_mostrar["Fecha de Cierre"], errors="coerce")
-
-        # Configurar estilo de fila por fecha
-        row_style = JsCode("""
-function(params) {
-    const fecha = new Date(params.data["Fecha de Cierre"]);
-    const hoy = new Date();
-    if (fecha < hoy) {
-        return {style: {background: "#f8d7da"}};
-    } else if (fecha.getMonth() === hoy.getMonth() && fecha.getFullYear() === hoy.getFullYear()) {
-        return {style: {background: "#fff3cd"}};
-    } else {
-        return {style: {background: "#d4edda"}};
-    }
-}
-""")
-
-        # Configurar tabla
-        gb = GridOptionsBuilder.from_dataframe(df_mostrar)
-        gb.configure_column("Título", cellRenderer="htmlRenderer")
-        gb.configure_default_column(editable=False, resizable=True)
-        grid_options = gb.build()
-        grid_options["getRowStyle"] = row_style
-
-        AgGrid(
-            df_mostrar,
-            gridOptions=grid_options,
-            enable_enterprise_modules=False,
-            allow_unsafe_jscode=True,
-            height=500
+        # Mostrar como tabla HTML con enlaces y colorear filas
+        def row_style(row):
+            if pd.isnull(row["Fecha de Cierre"]):
+                return ''
+            elif row["Fecha de Cierre"] < dt.datetime.today():
+                return 'background-color: #f8d7da'  # Rojo claro
+            elif row["Fecha de Cierre"].month == dt.datetime.today().month and row["Fecha de Cierre"].year == dt.datetime.today().year:
+                return 'background-color: #fff3cd'  # Amarillo claro
+            else:
+                return 'background-color: #d4edda'  # Verde claro
+        styled_table = df_mostrar.style.apply(lambda row: [row_style(row)] * len(row), axis=1)
+        st.write(
+            styled_table.to_html(escape=False, index=False),
+            unsafe_allow_html=True
         )
 
 
