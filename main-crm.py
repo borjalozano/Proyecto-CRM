@@ -142,9 +142,9 @@ if uploaded_file:
         }
         """)
         gb = GridOptionsBuilder.from_dataframe(df_mostrar)
-        gb.configure_grid_options(getRowStyle=row_style)
-        gb.configure_column("Título", cellRenderer="htmlRenderer")
+        gb.configure_default_column(editable=False, resizable=True)
         grid_options = gb.build()
+        grid_options["getRowStyle"] = row_style.js_code
 
         # Renderizar con AgGrid
         AgGrid(df_mostrar, gridOptions=grid_options, enable_enterprise_modules=False, height=500, allow_unsafe_jscode=True)
