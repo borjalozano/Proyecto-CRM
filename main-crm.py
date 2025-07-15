@@ -14,6 +14,10 @@ st.title("🔍 Revisión Semanal del Pipeline CRM")
 st.sidebar.header("📤 Carga de Export")
 uploaded_file = st.sidebar.file_uploader("Sube el Excel exportado desde BHZ", type=["xlsx"])
 
+st.sidebar.markdown("**🎨 Leyenda de colores:**  \n"
+                    "- 🔴 Rojo: Oferta atrasada  \n"
+                    "- 🟡 Amarillo: Cierre este mes  \n"
+                    "- 🟢 Verde: Cierre futuro")
 
 # --- Definición de pestañas ---
 tab1, tab2 = st.tabs(["📋 Tabla", "📊 Dashboard"])
@@ -68,11 +72,6 @@ if uploaded_file:
                 responsables = st.multiselect("Responsable", df.responsable.unique(), default=df.responsable.unique())
             with col3:
                 clientes = st.multiselect("Cliente", df.cliente.unique(), default=df.cliente.unique())
-
-            st.markdown("**🎨 Leyenda de colores:**  \n"
-                        "- 🔴 Rojo: Oferta atrasada  \n"
-                        "- 🟡 Amarillo: Cierre este mes  \n"
-                        "- 🟢 Verde: Cierre futuro")
 
             df = df[
                 df.estado_oportunidad.isin(estado) &
@@ -129,36 +128,21 @@ if uploaded_file:
         df_mostrar["Fecha de Cierre"] = pd.to_datetime(df_mostrar["Fecha de Cierre"], errors="coerce")
 
         # Estilo por fecha de cierre
-        cell_style_jscode = JsCode("""
-        function(params) {
-            const fechaCierre = new Date(params.value);
-            const hoy = new Date();
-            const cierreMes = (fechaCierre.getMonth() === hoy.getMonth()) && (fechaCierre.getFullYear() === hoy.getFullYear());
-            if (fechaCierre < hoy) {
-                return { 'backgroundColor': '#f8d7da' };
-            } else if (cierreMes) {
-                return { 'backgroundColor': '#fff3cd' };
-            } else {
-                return { 'backgroundColor': '#d4edda' };
-            }
-        }
-        """)
-
-        # Configurar AgGrid
-        gb = GridOptionsBuilder.from_dataframe(df_mostrar)
-        gb.configure_grid_options(getRowStyle=JsCode("""
+        row_style = JsCode("""
         function(params) {
             const fecha = new Date(params.data["Fecha de Cierre"]);
             const hoy = new Date();
             if (fecha < hoy) {
-                return { 'style': { 'background': '#f8d7da' }};
+                return { style: { backgroundColor: '#f8d7da' }};
             } else if (fecha.getMonth() === hoy.getMonth() && fecha.getFullYear() === hoy.getFullYear()) {
-                return { 'style': { 'background': '#fff3cd' }};
+                return { style: { backgroundColor: '#fff3cd' }};
             } else {
-                return { 'style': { 'background': '#d4edda' }};
+                return { style: { backgroundColor: '#d4edda' }};
             }
         }
-        """))
+        """)
+        gb = GridOptionsBuilder.from_dataframe(df_mostrar)
+        gb.configure_grid_options(getRowStyle=row_style)
         gb.configure_column("Título", cellRenderer="htmlRenderer")
         grid_options = gb.build()
 
