@@ -153,7 +153,14 @@ if uploaded_file:
             else:
                 return 'background-color: #d4edda'  # Verde claro
         styled_table = df_mostrar.style.apply(lambda row: [row_style(row)] * len(row), axis=1)
-        st.write(styled_table.to_html(escape=False, index=False), unsafe_allow_html=True)
+        st.markdown(
+            f'''
+            <div style="max-height: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 0.5rem;">
+                {styled_table.to_html(escape=False, index=False)}
+            </div>
+            ''',
+            unsafe_allow_html=True
+        )
 
 
     with tab2:
