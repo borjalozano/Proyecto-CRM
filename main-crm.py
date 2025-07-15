@@ -319,7 +319,7 @@ if uploaded_file:
             }
             df_vivas["estado_normalizado"] = df_vivas["Estado Oportunidad"].str.lower()
             df_vivas["Probabilidad Ajustada"] = df_vivas.apply(
-                lambda row: min(float(str(row["Probabilidad de Ganar"]).strip('%')) / 100 * ajuste_estado.get(row["estado_normalizado"], 1), 1.0),
+                lambda row: min(row["Probabilidad de Ganar"] * ajuste_estado.get(row["estado_normalizado"], 1), 1.0),
                 axis=1
             )
             df_vivas = df_vivas.drop(columns=["estado_normalizado"])
