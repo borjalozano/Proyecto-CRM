@@ -269,36 +269,12 @@ if uploaded_file:
                 df_vivas["Predicción"] = model.predict(df_vivas_model)
                 df_vivas["Probabilidad de Ganar"] = model.predict_proba(df_vivas_model)[:, 1]
 
-                # Ajustar probabilidad según etapa del pipeline
-                ponderador_estado = {
-                    "preparación de la propuesta": 1.10,
-                    "propuesta enviada": 1.15,
-                    "validada": 1.20,
-                    "en validación": 1.20,
-                    "identificada": 0.85,
-                }
-                df_vivas["Estado Oportunidad"] = df_vivas["Estado Oportunidad"].str.lower()
-                df_vivas["Probabilidad de Ganar Ajustada"] = df_vivas.apply(
-                    lambda row: min(row["Probabilidad de Ganar"] * ponderador_estado.get(row["Estado Oportunidad"], 1), 1.0),
-                    axis=1
-                )
-
                 st.markdown("### 📋 Predicciones sobre oportunidades vivas")
-                def color_prob(val):
-                    if val >= 0.7:
-                        return "background-color: #d4edda"  # verde
-                    elif val >= 0.5:
-                        return "background-color: #fff3cd"  # amarillo
-                    else:
-                        return "background-color: #f8d7da"  # rojo
-
-                styled_df = df_vivas[[
+                st.dataframe(df_vivas[[
                     "Estado Oportunidad", "Título", "Cliente", "Responsable", "Importe",
                     "Probabilidad", "Fecha Cierre Oportunidad",
-                    "Predicción", "Probabilidad de Ganar Ajustada"
-                ]].style.format({"Importe": "${:,.0f}", "Probabilidad de Ganar Ajustada": "{:.2f}"}).applymap(color_prob, subset=["Probabilidad de Ganar Ajustada"])
-
-                st.write(styled_df.to_html(escape=False, index=False), unsafe_allow_html=True)
+                    "Predicción", "Probabilidad de Ganar"
+                ]], use_container_width=True)
 
 else:
     st.info("Carga un archivo Excel para comenzar.")
