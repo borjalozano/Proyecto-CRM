@@ -26,8 +26,8 @@ if uploaded_file:
 
     if "importe_servicio" in df.columns:
         df["importe_servicio"] = df["importe_servicio"].astype(str).str.replace("CLP", "", case=False)
-        df["importe_servicio"] = df["importe_servicio"].str.replace(r"[^\d,]", "", regex=True)
-        df["importe_servicio"] = df["importe_servicio"].str.replace(".", "", regex=False).str.replace(",", ".", regex=False)
+        df["importe_servicio"] = df["importe_servicio"].str.replace(".", "", regex=False)
+        df["importe_servicio"] = df["importe_servicio"].str.replace(",", ".", regex=False)
         df["importe_servicio"] = pd.to_numeric(df["importe_servicio"], errors="coerce").fillna(0).round(0).astype(int)
 
     for col in ["2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"]:
@@ -82,8 +82,8 @@ if uploaded_file:
 
         # Reordenar y renombrar columnas para la vista
         columnas_tabla = [
-            "cliente", "título_link", "importe", "importe_servicio", "probabilidad",
-            "fecha_cierre_oportunidad", "2025_backlog", "2026_backlog", "2027_backlog", "2028_backlog"
+            "cliente", "título_link", "importe", "importe_servicio", "probabilidad", "responsable",
+            "fecha_cierre_oportunidad", "backlog_2025", "backlog_2026", "backlog_2027", "backlog_2028"
         ]
         # Asegurar que los nombres internos de backlog coincidan con columnas renombradas
         df.rename(columns={
@@ -95,13 +95,13 @@ if uploaded_file:
 
         # Ajustar columnas_tabla para usar los nombres correctos
         columnas_tabla = [
-            "cliente", "título_link", "importe", "importe_servicio", "probabilidad",
+            "cliente", "título_link", "importe", "importe_servicio", "probabilidad", "responsable",
             "fecha_cierre_oportunidad", "backlog_2025", "backlog_2026", "backlog_2027", "backlog_2028"
         ]
 
         df_mostrar = df[columnas_tabla].copy()
         df_mostrar.columns = [
-            "Cliente", "Título", "Importe", "Importe Servicio", "Probabilidad",
+            "Cliente", "Título", "Importe", "Importe Servicio", "Probabilidad", "Responsable",
             "Fecha de Cierre", "Backlog 2025", "Backlog 2026", "Backlog 2027", "Backlog 2028"
         ]
 
@@ -109,6 +109,8 @@ if uploaded_file:
         for col in ["Importe", "Importe Servicio", "Backlog 2025", "Backlog 2026", "Backlog 2027", "Backlog 2028"]:
             df_mostrar[col] = pd.to_numeric(df_mostrar[col], errors="coerce").fillna(0).astype(int)
             df_mostrar[col] = df_mostrar[col].apply(lambda x: f"${x:,.0f}".replace(",", "."))
+        df_mostrar["Probabilidad"] = pd.to_numeric(df_mostrar["Probabilidad"], errors="coerce").fillna(0).astype(int)
+        df_mostrar["Probabilidad"] = df_mostrar["Probabilidad"].apply(lambda x: f"{x}%")
 
         # Mostrar como tabla HTML con enlaces y colorear filas
         def row_style(row):
@@ -122,6 +124,21 @@ if uploaded_file:
         st.write(styled_table.to_html(escape=False, index=False), unsafe_allow_html=True)
 
     with tab2:
+        with st.expander("📊 Filtros Dashboard"):
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                estado_d = st.multiselect("Estado", df.estado_oportunidad.unique(), default=df.estado_oportunidad.unique())
+            with col2:
+                responsables_d = st.multiselect("Responsable", df.responsable.unique(), default=df.responsable.unique())
+            with col3:
+                clientes_d = st.multiselect("Cliente", df.cliente.unique(), default=df.cliente.unique())
+
+            df = df[
+                df.estado_oportunidad.isin(estado_d) &
+                df.responsable.isin(responsables_d) &
+                df.cliente.isin(clientes_d)
+            ]
+
         # --- INDICADORES Y GRÁFICOS ---
         st.subheader("📈 Dashboard de Indicadores")
         col1, col2, col3 = st.columns(3)
