@@ -105,7 +105,7 @@ if uploaded_file:
             "Fecha de Cierre", "Backlog 2025", "Backlog 2026", "Backlog 2027", "Backlog 2028"
         ]
 
-        # Formatear columnas monetarias como CLP sin decimales
+        # Formatear columnas monetarias como CLP sin  decimales
         for col in ["Importe", "Importe Servicio", "Backlog 2025", "Backlog 2026", "Backlog 2027", "Backlog 2028"]:
             df_mostrar[col] = pd.to_numeric(df_mostrar[col], errors="coerce").fillna(0).astype(int)
             df_mostrar[col] = df_mostrar[col].apply(lambda x: f"${x:,.0f}".replace(",", "."))
