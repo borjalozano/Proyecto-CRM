@@ -90,7 +90,7 @@ if uploaded_file:
 
         # Reordenar y renombrar columnas para la vista
         columnas_tabla = [
-            "cliente", "título_link", "importe", "importe_servicio", "probabilidad", "responsable",
+            "cliente", "título_link", "importe", "probabilidad", "responsable",
             "fecha_cierre_oportunidad", "backlog_2025", "backlog_2026", "backlog_2027", "backlog_2028"
         ]
         # Asegurar que los nombres internos de backlog coincidan con columnas renombradas
@@ -103,18 +103,18 @@ if uploaded_file:
 
         # Ajustar columnas_tabla para usar los nombres correctos
         columnas_tabla = [
-            "cliente", "título_link", "importe", "importe_servicio", "probabilidad", "responsable",
+            "cliente", "título_link", "importe", "probabilidad", "responsable",
             "fecha_cierre_oportunidad", "backlog_2025", "backlog_2026", "backlog_2027", "backlog_2028"
         ]
 
         df_mostrar = df[columnas_tabla].copy()
         df_mostrar.columns = [
-            "Cliente", "Título", "Importe", "Importe Servicio", "Probabilidad", "Responsable",
+            "Cliente", "Título", "Importe", "Probabilidad", "Responsable",
             "Fecha de Cierre", "Backlog 2025", "Backlog 2026", "Backlog 2027", "Backlog 2028"
         ]
 
         # Formatear columnas monetarias como CLP sin  decimales
-        for col in ["Importe", "Importe Servicio", "Backlog 2025", "Backlog 2026", "Backlog 2027", "Backlog 2028"]:
+        for col in ["Importe", "Backlog 2025", "Backlog 2026", "Backlog 2027", "Backlog 2028"]:
             df_mostrar[col] = pd.to_numeric(df_mostrar[col], errors="coerce").fillna(0).astype(int)
             df_mostrar[col] = df_mostrar[col].apply(lambda x: f"${x:,.0f}".replace(",", "."))
         df_mostrar["Probabilidad"] = pd.to_numeric(df_mostrar["Probabilidad"], errors="coerce").fillna(0).astype(int)
