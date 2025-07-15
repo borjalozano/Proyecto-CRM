@@ -82,10 +82,9 @@ if uploaded_file:
         # --- DATATABLE ---
         st.subheader("📋 Oportunidades filtradas")
 
-        # Crear columna de título como hipervínculo
+        # Crear columna de título como hipervínculo en formato Markdown
         df["título_link"] = df.apply(
-            lambda row: f'<a href="{row["enlace_a_la_oportunidad"]}" target="_blank">{row["título"]}</a>',
-            axis=1
+            lambda row: f"[{row['título']}]({row['enlace_a_la_oportunidad']})", axis=1
         )
 
         # Reordenar y renombrar columnas para la vista
@@ -122,7 +121,13 @@ if uploaded_file:
 
         df_mostrar = df_mostrar.sort_values(by="Fecha de Cierre", ascending=True)
 
-        st.dataframe(df_mostrar, use_container_width=True, hide_index=True)
+        # Mostrar la tabla con títulos como enlaces Markdown
+        # Convertir la columna "Título" a Markdown con hipervínculo antes de mostrar
+        for i, row in df_mostrar.iterrows():
+            df_mostrar.at[i, "Título"] = row["Título"]
+        st.markdown(
+            df_mostrar.to_markdown(index=False), unsafe_allow_html=True
+        )
 
     with tab2:
         with st.expander("📊 Filtros Dashboard"):
