@@ -47,7 +47,26 @@ if uploaded_file:
 
     # --- DATATABLE ---
     st.subheader("📋 Oportunidades filtradas")
-    st.dataframe(df, use_container_width=True)
+
+    # Crear columna de título como hipervínculo
+    df["título_link"] = df.apply(
+        lambda row: f'<a href="{row["enlace_a_la_oportunidad"]}" target="_blank">{row["título"]}</a>',
+        axis=1
+    )
+
+    # Reordenar y renombrar columnas para la vista
+    columnas_tabla = [
+        "cliente", "título_link", "importe", "importe_servicio", "probabilidad",
+        "fecha_cierre_oportunidad", "backlog_2025", "backlog_2026", "backlog_2027", "backlog_2028"
+    ]
+    df_mostrar = df[columnas_tabla].copy()
+    df_mostrar.columns = [
+        "Cliente", "Título", "Importe", "Importe Servicio", "Probabilidad",
+        "Fecha de Cierre", "Backlog 2025", "Backlog 2026", "Backlog 2027", "Backlog 2028"
+    ]
+
+    # Mostrar como tabla HTML con enlaces
+    st.write(df_mostrar.to_html(escape=False, index=False), unsafe_allow_html=True)
 
     # --- INDICADORES Y GRÁFICOS ---
     st.subheader("📈 Dashboard de Indicadores")
