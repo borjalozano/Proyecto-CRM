@@ -294,6 +294,10 @@ if uploaded_file:
             # Aplicar a oportunidades vivas
             estados_excluir = ["ganada", "descartada", "perdida"]
             df_vivas = df_hist_full[~df_hist_full["Estado Oportunidad"].str.lower().isin(estados_excluir)].copy()
+
+            # Calcular historial para oportunidades vivas
+            df_vivas["ganadas_por_responsable"] = df_vivas["Responsable"].map(win_por_responsable).fillna(0)
+            df_vivas["ganadas_por_cliente"] = df_vivas["Cliente"].map(win_por_cliente).fillna(0)
             df_vivas_model = df_vivas[columnas_modelo].copy()
 
             for col in ["Importe", "2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"]:
