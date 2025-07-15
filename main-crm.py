@@ -25,6 +25,11 @@ if uploaded_file:
     df = df[columnas]
     df.columns = [c.strip().lower().replace(" ", "_").replace("/", "_").replace(".", "") for c in df.columns]
 
+    # Convertir columnas de backlog a numérico desde el principio
+    for col in ["2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"]:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
     # --- PARSE FECHAS ---
     for col in ["fecha_cierre_oportunidad", "fecha_de_detección", "modificado_en", "fecha_presentación_propuesta", "fecha_de_inicio_estimada"]:
         df[col] = pd.to_datetime(df[col], errors="coerce")
@@ -57,8 +62,22 @@ if uploaded_file:
     # Reordenar y renombrar columnas para la vista
     columnas_tabla = [
         "cliente", "título_link", "importe", "importe_servicio", "probabilidad",
+        "fecha_cierre_oportunidad", "2025_backlog", "2026_backlog", "2027_backlog", "2028_backlog"
+    ]
+    # Asegurar que los nombres internos de backlog coincidan con columnas renombradas
+    df.rename(columns={
+        "2025_backlog": "backlog_2025",
+        "2026_backlog": "backlog_2026",
+        "2027_backlog": "backlog_2027",
+        "2028_backlog": "backlog_2028"
+    }, inplace=True)
+
+    # Ajustar columnas_tabla para usar los nombres correctos
+    columnas_tabla = [
+        "cliente", "título_link", "importe", "importe_servicio", "probabilidad",
         "fecha_cierre_oportunidad", "backlog_2025", "backlog_2026", "backlog_2027", "backlog_2028"
     ]
+
     df_mostrar = df[columnas_tabla].copy()
     df_mostrar.columns = [
         "Cliente", "Título", "Importe", "Importe Servicio", "Probabilidad",
