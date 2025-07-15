@@ -263,7 +263,7 @@ if uploaded_file:
             columnas_modelo = [
                 "Importe", "Probabilidad", "Responsable", "Cliente",
                 "Tipo de Trarificación", "Modelo de Ejecuciones",
-                "Servicio/Subservicio/XtechCore.", "Estado Oportunidad",
+                "Servicio/Subservicio/XtechCore.",
                 "ganadas_por_responsable", "ganadas_por_cliente",
                 "2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"
             ]
@@ -277,8 +277,7 @@ if uploaded_file:
             from sklearn.preprocessing import LabelEncoder
             label_cols = [
                 "Responsable", "Cliente", "Tipo de Trarificación",
-                "Modelo de Ejecuciones", "Servicio/Subservicio/XtechCore.",
-                "Estado Oportunidad"
+                "Modelo de Ejecuciones", "Servicio/Subservicio/XtechCore."
             ]
             encoders = {}
             for col in label_cols:
@@ -310,8 +309,22 @@ if uploaded_file:
             df_vivas["Predicción"] = model.predict(df_vivas_model.values)
             df_vivas["Probabilidad de Ganar"] = model.predict_proba(df_vivas_model.values)[:, 1]
 
-            df_vivas = df_vivas.sort_values(by="Probabilidad de Ganar", ascending=False)
-            df_vivas["Probabilidad de Ganar"] = df_vivas["Probabilidad de Ganar"].apply(lambda x: f"{x:.0%}")
+            # Ajustar probabilidad según estado de la oportunidad
+            ajuste_estado = {
+                "identificada": 0.85,
+                "preparación de la propuesta": 1.10,
+                "propuesta enviada": 1.15,
+                "validada": 1.20,
+                "en validación": 1.20,
+            }
+            df_vivas["estado_normalizado"] = df_vivas["Estado Oportunidad"].str.lower()
+            df_vivas["Probabilidad Ajustada"] = df_vivas.apply(
+                lambda row: min(float(str(row["Probabilidad de Ganar"]).strip('%')) / 100 * ajuste_estado.get(row["estado_normalizado"], 1), 1.0),
+                axis=1
+            )
+            df_vivas = df_vivas.drop(columns=["estado_normalizado"])
+            df_vivas = df_vivas.sort_values(by="Probabilidad Ajustada", ascending=False)
+            df_vivas["Probabilidad Ajustada"] = df_vivas["Probabilidad Ajustada"].apply(lambda x: f"{x:.0%}")
 
             df_vivas["Importe"] = df_vivas["Importe"].apply(lambda x: f"${x:,.0f}".replace(",", "."))
 
@@ -319,7 +332,7 @@ if uploaded_file:
             st.dataframe(df_vivas[[
                 "Estado Oportunidad", "Título", "Cliente", "Responsable", "Importe",
                 "Probabilidad", "Fecha Cierre Oportunidad",
-                "Predicción", "Probabilidad de Ganar"
+                "Predicción", "Probabilidad Ajustada"
             ]], use_container_width=True)
 
 else:
