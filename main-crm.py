@@ -2,11 +2,12 @@ import streamlit as st
 import pandas as pd
 import datetime as dt
 import matplotlib.pyplot as plt
+import plotly.express as px
 
 st.set_page_config(page_title="CRM Semanal", layout="wide")
 
-st.title("🔍 Revisión Semanal del Pipeline CRM")
 st.image("Logo Babel Horizontal (1).jpg", width=250)
+st.title("🔍 Revisión Semanal del Pipeline CRM")
 
 # --- CARGA DEL ARCHIVO EXCEL ---
 st.sidebar.header("📤 Carga de Export")
@@ -151,13 +152,13 @@ if uploaded_file:
 
         col1.metric("💰 Total Pipeline", f"${total_pipeline:,.0f}")
         col2.metric("⚠️ Ofertas Atrasadas", len(atrasadas))
-        col3.metric("📆 Cierre este mes", len(mes_actual))
+        col3.metric("📆 Ofertas con Cierre este mes", len(mes_actual))
 
         col4 = st.columns(1)[0]
-        col4.metric("📦 Total Oportunidades en Backlog", f"{len(df):,}".replace(",", "."))
+        col4.metric("📦 Total Oportunidades en Pipeline", f"{len(df):,}".replace(",", "."))
 
         # --- BACKLOG POR AÑO ---
-        st.markdown("#### 📊 Backlog Proyectado")
+        st.markdown("#### 📊 Pipeline Proyectado")
         backlog_cols = ["backlog_2025", "backlog_2026", "backlog_2027", "backlog_2028"]
 
         # Convertir a numérico antes de usar en cualquier parte
@@ -166,21 +167,30 @@ if uploaded_file:
 
         backlog_totales = (df[backlog_cols].sum() / 1_000_000).round(1)
 
-        fig, ax = plt.subplots()
-        backlog_totales.plot(kind="bar", ax=ax)
-        ax.set_ylabel("Millones CLP")
-        ax.set_title("Backlog por año")
-        st.pyplot(fig)
+        fig = px.bar(
+            x=backlog_totales.index.str.replace("backlog_", "").str.upper(),
+            y=backlog_totales.values,
+            labels={'x': 'Año', 'y': 'Millones CLP'},
+            text=backlog_totales.values,
+            title="Pipeline por año"
+        )
+        fig.update_traces(texttemplate='%{text:.1f}', hovertemplate='CLP %{y:.1f} millones')
+        st.plotly_chart(fig, use_container_width=True)
 
         # --- PIPELINE POR CLIENTE ---
         st.markdown("#### 🏢 Pipeline por Cliente")
         pipeline_cliente = (df.groupby("cliente")["importe"].sum().sort_values(ascending=False).head(10) / 1_000_000).round(1)
 
-        fig2, ax2 = plt.subplots()
-        pipeline_cliente.plot(kind="barh", ax=ax2)
-        ax2.set_xlabel("Millones CLP")
-        ax2.invert_yaxis()
-        st.pyplot(fig2)
+        fig2 = px.bar(
+            x=pipeline_cliente.values,
+            y=pipeline_cliente.index,
+            orientation='h',
+            labels={'x': 'Millones CLP', 'y': 'Cliente'},
+            text=pipeline_cliente.values,
+            title="Pipeline por Cliente"
+        )
+        fig2.update_traces(texttemplate='%{text:.1f}', hovertemplate='CLP %{x:.1f} millones')
+        st.plotly_chart(fig2, use_container_width=True)
 
 else:
     st.info("Carga un archivo Excel para comenzar.")
