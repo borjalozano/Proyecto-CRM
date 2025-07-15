@@ -210,76 +210,100 @@ if uploaded_file:
         if hist_file:
             df_hist_full = pd.read_excel(hist_file)
 
-            model_option = st.selectbox("Selecciona el modelo a aplicar", ["Random Forest (v1)"])
+            model_option = st.selectbox(
+                "Selecciona el modelo a aplicar",
+                ["Random Forest (v1)", "Logistic Regression", "XGBoost", "LightGBM", "MLPClassifier"]
+            )
+
+            # Mostrar info del modelo seleccionado
             if model_option == "Random Forest (v1)":
-                st.info(
-                    "🌳 **Random Forest (v1)**: Este modelo está basado en múltiples árboles de decisión entrenados "
-                    "sobre distintas combinaciones de datos. Evalúa factores como importe, probabilidad, tipo de servicio y responsable, "
-                    "para estimar si una oportunidad se ganará o no. Es robusto ante ruido y útil cuando se combinan variables categóricas y numéricas."
-                )
-                # Preparar etiquetas
-                df_hist_full["estado_objetivo"] = df_hist_full["Estado Oportunidad"].str.lower().map({
-                    "ganada": 1,
-                    "descartada": 0,
-                    "perdida": 0
-                })
-                df_hist_modelo = df_hist_full.dropna(subset=["estado_objetivo"])
+                st.info("🌳 **Random Forest (v1):** Combina múltiples árboles de decisión entrenados con distintas partes del dataset. Ideal para datos mixtos (numéricos y categóricos). Robusto ante ruido.")
+            elif model_option == "Logistic Regression":
+                st.info("📈 **Logistic Regression:** Modelo estadístico clásico, útil como línea base. Rápido, simple y fácil de interpretar.")
+            elif model_option == "XGBoost":
+                st.info("⚡ **XGBoost:** Variante avanzada de boosting. Alta precisión, pero puede requerir más ajustes. Excelente en datos tabulares.")
+            elif model_option == "LightGBM":
+                st.info("🚀 **LightGBM:** Modelo basado en boosting optimizado para velocidad. Muy bueno con muchas filas y columnas.")
+            elif model_option == "MLPClassifier":
+                st.info("🧠 **Red Neuronal (MLP):** Modelo con capas ocultas que puede capturar relaciones no lineales. Requiere algo más de procesamiento y entrenamiento.")
 
-                # Columnas a usar
-                columnas_modelo = [
-                    "Importe", "Probabilidad", "Responsable", "Cliente",
-                    "Tipo de Trarificación", "Modelo de Ejecuciones",
-                    "Servicio/Subservicio/XtechCore.",
-                    "2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"
-                ]
-                df_model = df_hist_modelo[columnas_modelo + ["estado_objetivo"]].copy()
-
-                # Limpiar numéricos
-                for col in ["Importe", "2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"]:
-                    df_model[col] = pd.to_numeric(df_model[col], errors="coerce").fillna(0)
-
-                # Codificar texto
-                from sklearn.preprocessing import LabelEncoder
-                label_cols = ["Responsable", "Cliente", "Tipo de Trarificación", "Modelo de Ejecuciones", "Servicio/Subservicio/XtechCore."]
-                encoders = {}
-                for col in label_cols:
-                    enc = LabelEncoder()
-                    df_model[col] = enc.fit_transform(df_model[col].astype(str))
-                    encoders[col] = enc
-
-                # Entrenar modelo
+            if model_option == "Random Forest (v1)":
                 from sklearn.ensemble import RandomForestClassifier
-                X = df_model.drop("estado_objetivo", axis=1)
-                y = df_model["estado_objetivo"]
                 model = RandomForestClassifier(n_estimators=100, random_state=42)
-                model.fit(X, y)
+            elif model_option == "Logistic Regression":
+                from sklearn.linear_model import LogisticRegression
+                model = LogisticRegression(max_iter=1000)
+            elif model_option == "XGBoost":
+                from xgboost import XGBClassifier
+                model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+            elif model_option == "LightGBM":
+                from lightgbm import LGBMClassifier
+                model = LGBMClassifier()
+            elif model_option == "MLPClassifier":
+                from sklearn.neural_network import MLPClassifier
+                model = MLPClassifier(hidden_layer_sizes=(100,), max_iter=300)
 
-                # Aplicar a oportunidades vivas
-                estados_excluir = ["ganada", "descartada", "perdida"]
-                df_vivas = df_hist_full[~df_hist_full["Estado Oportunidad"].str.lower().isin(estados_excluir)].copy()
-                df_vivas_model = df_vivas[columnas_modelo].copy()
+            # Preparar etiquetas
+            df_hist_full["estado_objetivo"] = df_hist_full["Estado Oportunidad"].str.lower().map({
+                "ganada": 1,
+                "descartada": 0,
+                "perdida": 0
+            })
+            df_hist_modelo = df_hist_full.dropna(subset=["estado_objetivo"])
 
-                for col in ["Importe", "2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"]:
-                    df_vivas_model[col] = pd.to_numeric(df_vivas_model[col], errors="coerce").fillna(0)
+            # Columnas a usar
+            columnas_modelo = [
+                "Importe", "Probabilidad", "Responsable", "Cliente",
+                "Tipo de Trarificación", "Modelo de Ejecuciones",
+                "Servicio/Subservicio/XtechCore.",
+                "2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"
+            ]
+            df_model = df_hist_modelo[columnas_modelo + ["estado_objetivo"]].copy()
 
-                for col in label_cols:
-                    df_vivas_model[col] = df_vivas_model[col].astype(str)
-                    df_vivas_model[col] = df_vivas_model[col].apply(lambda x: encoders[col].transform([x])[0] if x in encoders[col].classes_ else -1)
+            # Limpiar numéricos
+            for col in ["Importe", "2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"]:
+                df_model[col] = pd.to_numeric(df_model[col], errors="coerce").fillna(0)
 
-                df_vivas["Predicción"] = model.predict(df_vivas_model)
-                df_vivas["Probabilidad de Ganar"] = model.predict_proba(df_vivas_model)[:, 1]
+            # Codificar texto
+            from sklearn.preprocessing import LabelEncoder
+            label_cols = ["Responsable", "Cliente", "Tipo de Trarificación", "Modelo de Ejecuciones", "Servicio/Subservicio/XtechCore."]
+            encoders = {}
+            for col in label_cols:
+                enc = LabelEncoder()
+                df_model[col] = enc.fit_transform(df_model[col].astype(str))
+                encoders[col] = enc
 
-                df_vivas = df_vivas.sort_values(by="Probabilidad de Ganar", ascending=False)
-                df_vivas["Probabilidad de Ganar"] = df_vivas["Probabilidad de Ganar"].apply(lambda x: f"{x:.0%}")
+            # Entrenar modelo
+            X = df_model.drop("estado_objetivo", axis=1)
+            y = df_model["estado_objetivo"]
+            model.fit(X, y)
 
-                df_vivas["Importe"] = df_vivas["Importe"].apply(lambda x: f"${x:,.0f}".replace(",", "."))
+            # Aplicar a oportunidades vivas
+            estados_excluir = ["ganada", "descartada", "perdida"]
+            df_vivas = df_hist_full[~df_hist_full["Estado Oportunidad"].str.lower().isin(estados_excluir)].copy()
+            df_vivas_model = df_vivas[columnas_modelo].copy()
 
-                st.markdown("### 📋 Predicciones sobre oportunidades vivas")
-                st.dataframe(df_vivas[[
-                    "Estado Oportunidad", "Título", "Cliente", "Responsable", "Importe",
-                    "Probabilidad", "Fecha Cierre Oportunidad",
-                    "Predicción", "Probabilidad de Ganar"
-                ]], use_container_width=True)
+            for col in ["Importe", "2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"]:
+                df_vivas_model[col] = pd.to_numeric(df_vivas_model[col], errors="coerce").fillna(0)
+
+            for col in label_cols:
+                df_vivas_model[col] = df_vivas_model[col].astype(str)
+                df_vivas_model[col] = df_vivas_model[col].apply(lambda x: encoders[col].transform([x])[0] if x in encoders[col].classes_ else -1)
+
+            df_vivas["Predicción"] = model.predict(df_vivas_model)
+            df_vivas["Probabilidad de Ganar"] = model.predict_proba(df_vivas_model)[:, 1]
+
+            df_vivas = df_vivas.sort_values(by="Probabilidad de Ganar", ascending=False)
+            df_vivas["Probabilidad de Ganar"] = df_vivas["Probabilidad de Ganar"].apply(lambda x: f"{x:.0%}")
+
+            df_vivas["Importe"] = df_vivas["Importe"].apply(lambda x: f"${x:,.0f}".replace(",", "."))
+
+            st.markdown("### 📋 Predicciones sobre oportunidades vivas")
+            st.dataframe(df_vivas[[
+                "Estado Oportunidad", "Título", "Cliente", "Responsable", "Importe",
+                "Probabilidad", "Fecha Cierre Oportunidad",
+                "Predicción", "Probabilidad de Ganar"
+            ]], use_container_width=True)
 
 else:
     st.info("Carga un archivo Excel para comenzar.")

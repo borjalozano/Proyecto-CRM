@@ -10,3 +10,6 @@ matplotlib
 tabulate
 streamlit-aggrid
 scikit-learn
+openpyxl
+xgboost
+lightgbm
