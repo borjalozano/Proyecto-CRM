@@ -183,11 +183,11 @@ if uploaded_file:
             "Millones CLP": backlog_totales
         })
         fig = px.bar(
-            pipeline_df,
+            pipeline_df.astype({"Año": "category"}),
             x="Año",
             y="Millones CLP",
             labels={'x': 'Año', 'y': 'Millones CLP'},
-            text=backlog_totales,
+            text="Millones CLP",
             title="Pipeline por año"
         )
         fig.update_traces(texttemplate='%{text:.1f}', hovertemplate='CLP %{y:.1f} millones')
