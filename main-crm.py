@@ -235,7 +235,7 @@ if uploaded_file:
                 model = LogisticRegression(max_iter=1000)
             elif model_option == "XGBoost":
                 from xgboost import XGBClassifier
-                model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+                model = XGBClassifier(eval_metric='logloss')
             elif model_option == "LightGBM":
                 from lightgbm import LGBMClassifier
                 model = LGBMClassifier()
@@ -276,7 +276,7 @@ if uploaded_file:
             # Entrenar modelo
             X = df_model.drop("estado_objetivo", axis=1)
             y = df_model["estado_objetivo"]
-            model.fit(X, y)
+            model.fit(X.values, y.values)
 
             # Aplicar a oportunidades vivas
             estados_excluir = ["ganada", "descartada", "perdida"]
@@ -290,8 +290,8 @@ if uploaded_file:
                 df_vivas_model[col] = df_vivas_model[col].astype(str)
                 df_vivas_model[col] = df_vivas_model[col].apply(lambda x: encoders[col].transform([x])[0] if x in encoders[col].classes_ else -1)
 
-            df_vivas["Predicción"] = model.predict(df_vivas_model)
-            df_vivas["Probabilidad de Ganar"] = model.predict_proba(df_vivas_model)[:, 1]
+            df_vivas["Predicción"] = model.predict(df_vivas_model.values)
+            df_vivas["Probabilidad de Ganar"] = model.predict_proba(df_vivas_model.values)[:, 1]
 
             df_vivas = df_vivas.sort_values(by="Probabilidad de Ganar", ascending=False)
             df_vivas["Probabilidad de Ganar"] = df_vivas["Probabilidad de Ganar"].apply(lambda x: f"{x:.0%}")
