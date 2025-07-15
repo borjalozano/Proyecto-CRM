@@ -144,10 +144,17 @@ if uploaded_file:
         gb = GridOptionsBuilder.from_dataframe(df_mostrar)
         gb.configure_default_column(editable=False, resizable=True)
         grid_options = gb.build()
-        grid_options["getRowStyle"] = row_style.js_code
+        grid_options["getRowStyle"] = row_style
 
         # Renderizar con AgGrid
-        AgGrid(df_mostrar, gridOptions=grid_options, enable_enterprise_modules=False, height=500, allow_unsafe_jscode=True)
+        AgGrid(
+            df_mostrar,
+            gridOptions=grid_options,
+            enable_enterprise_modules=False,
+            height=500,
+            allow_unsafe_jscode=True,
+            custom_js=JsCode("")
+        )
 
     with tab2:
         with st.expander("📊 Filtros Dashboard"):
