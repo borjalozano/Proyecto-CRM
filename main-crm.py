@@ -367,11 +367,20 @@ if uploaded_file:
                 if st.button("Generar explicación del modelo", key="analisis_ia_tab3"):
                     from openai import OpenAI
 
+                    top_5 = df_vivas[df_vivas["Predicción"] == 1].head(5)
+                    resumen_top = "\n".join(
+                        f"- {row['Título']} (Cliente: {row['Cliente']}, Responsable: {row['Responsable']}, Prob. ajustada: {row['Probabilidad Ajustada']})"
+                        for _, row in top_5.iterrows()
+                    )
+
                     explicacion = f"""
-                    El modelo seleccionado es {model_option}.
-                    Se ha aplicado sobre {len(df_vivas)} oportunidades vivas con datos como importe, probabilidad, historial del cliente y responsable.
-                    {len(df_vivas[df_vivas['Predicción'] == 1])} de ellas fueron predichas como ganadas.
-                    """
+El modelo seleccionado es {model_option}.
+Se ha aplicado sobre {len(df_vivas)} oportunidades vivas con datos como importe, probabilidad, historial del cliente y responsable.
+{len(df_vivas[df_vivas['Predicción'] == 1])} de ellas fueron predichas como ganadas.
+
+Las 5 oportunidades más prometedoras según el modelo son:
+{resumen_top}
+"""
 
                     if "OPENAI_API_KEY" in st.secrets:
                         client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
