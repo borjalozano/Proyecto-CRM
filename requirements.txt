@@ -9,3 +9,4 @@ plotly
 matplotlib
 tabulate
 streamlit-aggrid
+scikit-learn
