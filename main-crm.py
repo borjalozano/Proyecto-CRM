@@ -373,6 +373,9 @@ if uploaded_file:
                         for _, row in top_5.iterrows()
                     )
 
+                    top_clientes = top_5["Cliente"].value_counts().idxmax() if not top_5.empty else "N/A"
+                    top_responsables = top_5["Responsable"].value_counts().idxmax() if not top_5.empty else "N/A"
+
                     explicacion = f"""
 El modelo seleccionado es {model_option}.
 Se ha aplicado sobre {len(df_vivas)} oportunidades vivas con datos como importe, probabilidad, historial del cliente y responsable.
@@ -380,6 +383,8 @@ Se ha aplicado sobre {len(df_vivas)} oportunidades vivas con datos como importe,
 
 Las 5 oportunidades más prometedoras según el modelo son:
 {resumen_top}
+
+📌 Observación: El cliente más frecuente entre estas oportunidades es **{top_clientes}**, y el responsable con más presencia es **{top_responsables}**.
 """
 
                     if "OPENAI_API_KEY" in st.secrets:
