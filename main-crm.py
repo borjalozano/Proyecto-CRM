@@ -26,8 +26,8 @@ if uploaded_file:
 
     if "importe_servicio" in df.columns:
         df["importe_servicio"] = df["importe_servicio"].astype(str).str.replace("CLP", "", case=False)
-        df["importe_servicio"] = df["importe_servicio"].str.replace(".", "", regex=False)
-        df["importe_servicio"] = df["importe_servicio"].str.replace(",", ".", regex=False)
+        df["importe_servicio"] = df["importe_servicio"].str.replace(r"[^\d,\.]", "", regex=True)
+        df["importe_servicio"] = df["importe_servicio"].str.replace(".", "", regex=False).str.replace(",", ".", regex=False)
         df["importe_servicio"] = pd.to_numeric(df["importe_servicio"], errors="coerce").fillna(0).round(0).astype(int)
 
     for col in ["2025 backlog", "2026 backlog", "2027 backlog", "2028 backlog"]:
@@ -53,6 +53,8 @@ if uploaded_file:
     # --- PARSE FECHAS ---
     for col in ["fecha_cierre_oportunidad", "fecha_de_detección", "modificado_en", "fecha_presentación_propuesta", "fecha_de_inicio_estimada"]:
         df[col] = pd.to_datetime(df[col], errors="coerce")
+
+    df = df[df.acuerdo_marco.str.lower() != "sí"]
 
     with tab1:
         # --- PANEL DE FILTROS ---
@@ -151,6 +153,9 @@ if uploaded_file:
         col2.metric("⚠️ Ofertas Atrasadas", len(atrasadas))
         col3.metric("📆 Cierre este mes", len(mes_actual))
 
+        col4 = st.columns(1)[0]
+        col4.metric("📦 Total Oportunidades en Backlog", f"{len(df):,}".replace(",", "."))
+
         # --- BACKLOG POR AÑO ---
         st.markdown("#### 📊 Backlog Proyectado")
         backlog_cols = ["backlog_2025", "backlog_2026", "backlog_2027", "backlog_2028"]
@@ -159,21 +164,21 @@ if uploaded_file:
         for col in backlog_cols:
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
-        backlog_totales = df[backlog_cols].sum()
+        backlog_totales = (df[backlog_cols].sum() / 1_000_000).round(1)
 
         fig, ax = plt.subplots()
         backlog_totales.plot(kind="bar", ax=ax)
-        ax.set_ylabel("CLP")
+        ax.set_ylabel("Millones CLP")
         ax.set_title("Backlog por año")
         st.pyplot(fig)
 
         # --- PIPELINE POR CLIENTE ---
         st.markdown("#### 🏢 Pipeline por Cliente")
-        pipeline_cliente = df.groupby("cliente")["importe"].sum().sort_values(ascending=False).head(10)
+        pipeline_cliente = (df.groupby("cliente")["importe"].sum().sort_values(ascending=False).head(10) / 1_000_000).round(1)
 
         fig2, ax2 = plt.subplots()
         pipeline_cliente.plot(kind="barh", ax=ax2)
-        ax2.set_xlabel("CLP")
+        ax2.set_xlabel("Millones CLP")
         ax2.invert_yaxis()
         st.pyplot(fig2)
 
