@@ -126,29 +126,29 @@ if uploaded_file:
         df_mostrar = df_mostrar.sort_values(by="Fecha de Cierre", ascending=True)
 
         # --- RESUMEN GENERADO CON IA ---
-        from openai import OpenAI
+        with st.expander("🧠 Análisis generado por IA"):
+            if st.button("Generar resumen con IA", key="resumen_ia_tab1"):
+                from openai import OpenAI
 
-        st.subheader("🧠 Análisis generado por IA")
+                resumen = f"""
+                Se han cargado {len(df_mostrar)} oportunidades.
+                El importe total visible es de {df_mostrar['Importe'].str.replace('$','').str.replace('.','').astype(float).sum():,.0f} CLP.
+                Hay {sum(df_mostrar['Fecha de Cierre'].dt.month == dt.datetime.today().month)} oportunidades con cierre este mes.
+                El promedio de probabilidad declarada es de {pd.to_numeric(df_mostrar['Probabilidad'].str.replace('%','')).mean():.1f}%.
+                """
 
-        resumen = f"""
-Se han cargado {len(df_mostrar)} oportunidades.
-El importe total visible es de {df_mostrar['Importe'].str.replace('$','').str.replace('.','').astype(float).sum():,.0f} CLP.
-Hay {sum(df_mostrar['Fecha de Cierre'].dt.month == dt.datetime.today().month)} oportunidades con cierre este mes.
-El promedio de probabilidad declarada es de {pd.to_numeric(df_mostrar['Probabilidad'].str.replace('%','')).mean():.1f}%.
-"""
-
-        if "OPENAI_API_KEY" in st.secrets:
-            client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "Eres un asistente experto en análisis de oportunidades comerciales. Tu tarea es interpretar datos y sugerir insights estratégicos."},
-                    {"role": "user", "content": f"Con base en este resumen del pipeline: {resumen}, ¿qué observaciones clave destacarías?"}
-                ]
-            )
-            st.markdown(response.choices[0].message.content)
-        else:
-            st.warning("No se ha configurado la API key de OpenAI. Agrega OPENAI_API_KEY a tus secretos.")
+                if "OPENAI_API_KEY" in st.secrets:
+                    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+                    response = client.chat.completions.create(
+                        model="gpt-3.5-turbo",
+                        messages=[
+                            {"role": "system", "content": "Eres un asistente experto en análisis de oportunidades comerciales."},
+                            {"role": "user", "content": f"Con base en este resumen del pipeline: {resumen}, ¿qué observaciones clave destacarías?"}
+                        ]
+                    )
+                    st.markdown(response.choices[0].message.content)
+                else:
+                    st.warning("No se ha configurado la API key de OpenAI. Agrega OPENAI_API_KEY a tus secretos.")
 
         # --- DATATABLE ---
         st.subheader("📋 Oportunidades filtradas")
@@ -374,19 +374,28 @@ El promedio de probabilidad declarada es de {pd.to_numeric(df_mostrar['Probabili
 
             # --- ANÁLISIS DEL MODELO SELECCIONADO ---
             st.markdown("### 📌 Análisis del modelo seleccionado")
-            if model_option == "Random Forest (v1)":
-                st.markdown("Este modelo combinó múltiples árboles para evaluar patrones de ganancia/perdida.")
-                st.markdown("- Altamente robusto.")
-            elif model_option == "Logistic Regression":
-                st.markdown("Modelo estadístico lineal. Útil para entender influencia directa de cada variable.")
-            elif model_option == "XGBoost":
-                st.markdown("Modelo de boosting potente. Detecta interacciones complejas.")
-            elif model_option == "LightGBM":
-                st.markdown("Modelo optimizado para velocidad, muy eficiente con grandes volúmenes.")
-            elif model_option == "MLPClassifier":
-                st.markdown("Red neuronal multicapa. Captura relaciones no lineales pero es menos interpretable.")
+            with st.expander("🧠 Análisis del modelo con IA"):
+                if st.button("Generar explicación del modelo", key="analisis_ia_tab3"):
+                    from openai import OpenAI
 
-            st.markdown(f"🔍 De las {len(df_vivas)} oportunidades vivas evaluadas, **{(df_vivas['Predicción'] == 1).sum()}** fueron predichas como ganadas.")
+                    explicacion = f"""
+                    El modelo seleccionado es {model_option}.
+                    Se ha aplicado sobre {len(df_vivas)} oportunidades vivas con datos como importe, probabilidad, historial del cliente y responsable.
+                    {len(df_vivas[df_vivas['Predicción'] == 1])} de ellas fueron predichas como ganadas.
+                    """
+
+                    if "OPENAI_API_KEY" in st.secrets:
+                        client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+                        response = client.chat.completions.create(
+                            model="gpt-3.5-turbo",
+                            messages=[
+                                {"role": "system", "content": "Eres un experto en ciencia de datos y analítica predictiva. Explica cómo funciona el modelo seleccionado y qué insights clave puede extraer un gerente comercial."},
+                                {"role": "user", "content": explicacion}
+                            ]
+                        )
+                        st.markdown(response.choices[0].message.content)
+                    else:
+                        st.warning("No se ha configurado la API key de OpenAI. Agrega OPENAI_API_KEY a tus secretos.")
 
 else:
     st.info("Carga un archivo Excel para comenzar.")
