@@ -3,7 +3,6 @@ import pandas as pd
 import datetime as dt
 import matplotlib.pyplot as plt
 import plotly.express as px
-from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 
 st.set_page_config(page_title="CRM Semanal", layout="wide")
 
@@ -14,10 +13,6 @@ st.title("🔍 Revisión Semanal del Pipeline CRM")
 st.sidebar.header("📤 Carga de Export")
 uploaded_file = st.sidebar.file_uploader("Sube el Excel exportado desde BHZ", type=["xlsx"])
 
-st.sidebar.markdown("**🎨 Leyenda de colores:**  \n"
-                    "- 🔴 Rojo: Oferta atrasada  \n"
-                    "- 🟡 Amarillo: Cierre este mes  \n"
-                    "- 🟢 Verde: Cierre futuro")
 
 # --- Definición de pestañas ---
 tab1, tab2 = st.tabs(["📋 Tabla", "📊 Dashboard"])
@@ -73,6 +68,11 @@ if uploaded_file:
             with col3:
                 clientes = st.multiselect("Cliente", df.cliente.unique(), default=df.cliente.unique())
 
+            st.markdown("**🎨 Leyenda de colores:**  \n"
+                        "- 🔴 Rojo: Oferta atrasada  \n"
+                        "- 🟡 Amarillo: Cierre este mes  \n"
+                        "- 🟢 Verde: Cierre futuro")
+
             df = df[
                 df.estado_oportunidad.isin(estado) &
                 df.responsable.isin(responsables) &
@@ -82,14 +82,15 @@ if uploaded_file:
         # --- DATATABLE ---
         st.subheader("📋 Oportunidades filtradas")
 
-        # Crear columna de título como hipervínculo en formato Markdown
+        # Crear columna de título como hipervínculo
         df["título_link"] = df.apply(
-            lambda row: f"[{row['título']}]({row['enlace_a_la_oportunidad']})", axis=1
+            lambda row: f'<a href="{row["enlace_a_la_oportunidad"]}" target="_blank">{row["título"]}</a>',
+            axis=1
         )
 
         # Reordenar y renombrar columnas para la vista
         columnas_tabla = [
-            "cliente", "título_link", "importe", "probabilidad", "responsable",
+            "cliente", "título_link", "importe", "importe_servicio", "probabilidad", "responsable",
             "fecha_cierre_oportunidad", "backlog_2025", "backlog_2026", "backlog_2027", "backlog_2028"
         ]
         # Asegurar que los nombres internos de backlog coincidan con columnas renombradas
@@ -102,18 +103,18 @@ if uploaded_file:
 
         # Ajustar columnas_tabla para usar los nombres correctos
         columnas_tabla = [
-            "cliente", "título_link", "importe", "probabilidad", "responsable",
+            "cliente", "título_link", "importe", "importe_servicio", "probabilidad", "responsable",
             "fecha_cierre_oportunidad", "backlog_2025", "backlog_2026", "backlog_2027", "backlog_2028"
         ]
 
         df_mostrar = df[columnas_tabla].copy()
         df_mostrar.columns = [
-            "Cliente", "Título", "Importe", "Probabilidad", "Responsable",
+            "Cliente", "Título", "Importe", "Importe Servicio", "Probabilidad", "Responsable",
             "Fecha de Cierre", "Backlog 2025", "Backlog 2026", "Backlog 2027", "Backlog 2028"
         ]
 
         # Formatear columnas monetarias como CLP sin  decimales
-        for col in ["Importe", "Backlog 2025", "Backlog 2026", "Backlog 2027", "Backlog 2028"]:
+        for col in ["Importe", "Importe Servicio", "Backlog 2025", "Backlog 2026", "Backlog 2027", "Backlog 2028"]:
             df_mostrar[col] = pd.to_numeric(df_mostrar[col], errors="coerce").fillna(0).astype(int)
             df_mostrar[col] = df_mostrar[col].apply(lambda x: f"${x:,.0f}".replace(",", "."))
         df_mostrar["Probabilidad"] = pd.to_numeric(df_mostrar["Probabilidad"], errors="coerce").fillna(0).astype(int)
@@ -121,40 +122,46 @@ if uploaded_file:
 
         df_mostrar = df_mostrar.sort_values(by="Fecha de Cierre", ascending=True)
 
-        # Convertir "Título" en texto simple (sin enlace)
-        df_mostrar["Título"] = df["título"]
+        import streamlit.components.v1 as components
+        import uuid
 
-        # Asegurar que "Fecha de Cierre" sea datetime
-        df_mostrar["Fecha de Cierre"] = pd.to_datetime(df_mostrar["Fecha de Cierre"], errors="coerce")
+        # Aplicar colores con estilos inline directamente sobre el DataFrame HTML
+        def color_row(row):
+            color = ''
+            if pd.isnull(row["Fecha de Cierre"]):
+                color = ''
+            elif row["Fecha de Cierre"] < dt.datetime.today():
+                color = 'background-color: #f8d7da'
+            elif row["Fecha de Cierre"].month == dt.datetime.today().month and row["Fecha de Cierre"].year == dt.datetime.today().year:
+                color = 'background-color: #fff3cd'
+            else:
+                color = 'background-color: #d4edda'
+            return [color] * len(row)
 
-        # Estilo por fecha de cierre
-        row_style = JsCode("""
-        function(params) {
-            const fecha = new Date(params.data["Fecha de Cierre"]);
-            const hoy = new Date();
-            if (fecha < hoy) {
-                return { style: { backgroundColor: '#f8d7da' }};
-            } else if (fecha.getMonth() === hoy.getMonth() && fecha.getFullYear() === hoy.getFullYear()) {
-                return { style: { backgroundColor: '#fff3cd' }};
-            } else {
-                return { style: { backgroundColor: '#d4edda' }};
-            }
-        }
-        """)
-        gb = GridOptionsBuilder.from_dataframe(df_mostrar)
-        gb.configure_default_column(editable=False, resizable=True)
-        grid_options = gb.build()
-        grid_options["getRowStyle"] = row_style
-
-        # Renderizar con AgGrid
-        AgGrid(
-            df_mostrar,
-            gridOptions=grid_options,
-            enable_enterprise_modules=False,
-            height=500,
-            allow_unsafe_jscode=True,
-            custom_js=JsCode("")
-        )
+        styled = df_mostrar.style.apply(color_row, axis=1)
+        table_id = "dataframe-" + str(uuid.uuid4())
+        html = styled.to_html(escape=False, index=False, table_id=table_id)
+        html += f"""
+        <script>
+          const table = document.getElementById('{table_id}');
+          if (table) {{
+            const headers = table.querySelectorAll('thead th');
+            headers.forEach((th, i) => {{
+              th.style.cursor = 'pointer';
+              th.addEventListener('click', () => {{
+                const rows = Array.from(table.querySelectorAll('tbody tr'));
+                const sorted = rows.sort((a, b) => {{
+                  const tdA = a.children[i].innerText;
+                  const tdB = b.children[i].innerText;
+                  return tdA.localeCompare(tdB, undefined, {{ numeric: true }});
+                }});
+                rows.forEach(row => table.querySelector('tbody').appendChild(row));
+              }});
+            }});
+          }}
+        </script>
+        """
+        components.html(html, height=600, scrolling=True)
 
     with tab2:
         with st.expander("📊 Filtros Dashboard"):
