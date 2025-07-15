@@ -122,10 +122,8 @@ if uploaded_file:
 
         df_mostrar = df_mostrar.sort_values(by="Fecha de Cierre", ascending=True)
 
-        # Convertir "Título" en hipervínculo HTML
-        df_mostrar["Título"] = df.apply(
-            lambda row: f'<a href="{row["enlace_a_la_oportunidad"]}" target="_blank">{row["título"]}</a>', axis=1
-        )
+        # Convertir "Título" en texto simple (sin enlace)
+        df_mostrar["Título"] = df["título"]
 
         # Asegurar que "Fecha de Cierre" sea datetime
         df_mostrar["Fecha de Cierre"] = pd.to_datetime(df_mostrar["Fecha de Cierre"], errors="coerce")
@@ -148,7 +146,19 @@ if uploaded_file:
 
         # Configurar AgGrid
         gb = GridOptionsBuilder.from_dataframe(df_mostrar)
-        gb.configure_column("Fecha de Cierre", cellStyle=cell_style_jscode)
+        gb.configure_grid_options(getRowStyle=JsCode("""
+        function(params) {
+            const fecha = new Date(params.data["Fecha de Cierre"]);
+            const hoy = new Date();
+            if (fecha < hoy) {
+                return { 'style': { 'background': '#f8d7da' }};
+            } else if (fecha.getMonth() === hoy.getMonth() && fecha.getFullYear() === hoy.getFullYear()) {
+                return { 'style': { 'background': '#fff3cd' }};
+            } else {
+                return { 'style': { 'background': '#d4edda' }};
+            }
+        }
+        """))
         gb.configure_column("Título", cellRenderer="htmlRenderer")
         grid_options = gb.build()
 
