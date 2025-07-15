@@ -6,3 +6,4 @@ fpdf
 PyMuPDF
 yagmail
 plotly
+matplotlib
