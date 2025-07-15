@@ -115,6 +115,8 @@ if uploaded_file:
         df_mostrar["Probabilidad"] = pd.to_numeric(df_mostrar["Probabilidad"], errors="coerce").fillna(0).astype(int)
         df_mostrar["Probabilidad"] = df_mostrar["Probabilidad"].apply(lambda x: f"{x}%")
 
+        df_mostrar = df_mostrar.sort_values(by="Fecha de Cierre", ascending=True)
+
         # Mostrar como tabla HTML con enlaces y colorear filas
         def row_style(row):
             if row["Fecha de Cierre"].month == dt.datetime.today().month and row["Fecha de Cierre"].year == dt.datetime.today().year:
@@ -167,8 +169,9 @@ if uploaded_file:
 
         backlog_totales = (df[backlog_cols].sum() / 1_000_000).round(1)
 
+        x_labels = ["2025", "2026", "2027", "2028"]
         fig = px.bar(
-            x=backlog_totales.index.str.replace("backlog_", "").str.upper(),
+            x=x_labels,
             y=backlog_totales.values,
             labels={'x': 'Año', 'y': 'Millones CLP'},
             text=backlog_totales.values,
