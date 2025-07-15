@@ -154,11 +154,29 @@ if uploaded_file:
                 return 'background-color: #d4edda'  # Verde claro
         styled_table = df_mostrar.style.apply(lambda row: [row_style(row)] * len(row), axis=1)
         st.markdown(
-            f'''
-            <div style="max-height: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 0.5rem;">
+            f"""
+            <style>
+            .table-scroll tbody {{
+                display: block;
+                max-height: 500px;
+                overflow-y: auto;
+            }}
+            .table-scroll thead, .table-scroll tbody tr {{
+                display: table;
+                width: 100%;
+                table-layout: fixed;
+            }}
+            .table-scroll thead {{
+                background-color: #f9f9f9;
+                position: sticky;
+                top: 0;
+                z-index: 1;
+            }}
+            </style>
+            <div class="table-scroll">
                 {styled_table.to_html(escape=False, index=False)}
             </div>
-            ''',
+            """,
             unsafe_allow_html=True
         )
 
