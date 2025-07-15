@@ -3,6 +3,7 @@ import pandas as pd
 import datetime as dt
 import matplotlib.pyplot as plt
 import plotly.express as px
+from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 
 st.set_page_config(page_title="CRM Semanal", layout="wide")
 
@@ -121,13 +122,38 @@ if uploaded_file:
 
         df_mostrar = df_mostrar.sort_values(by="Fecha de Cierre", ascending=True)
 
-        # Mostrar la tabla con títulos como enlaces Markdown
-        # Convertir la columna "Título" a Markdown con hipervínculo antes de mostrar
-        for i, row in df_mostrar.iterrows():
-            df_mostrar.at[i, "Título"] = row["Título"]
-        st.markdown(
-            df_mostrar.to_markdown(index=False), unsafe_allow_html=True
+        # Convertir "Título" en hipervínculo HTML
+        df_mostrar["Título"] = df.apply(
+            lambda row: f'<a href="{row["enlace_a_la_oportunidad"]}" target="_blank">{row["título"]}</a>', axis=1
         )
+
+        # Asegurar que "Fecha de Cierre" sea datetime
+        df_mostrar["Fecha de Cierre"] = pd.to_datetime(df_mostrar["Fecha de Cierre"], errors="coerce")
+
+        # Estilo por fecha de cierre
+        cell_style_jscode = JsCode("""
+        function(params) {
+            const fechaCierre = new Date(params.value);
+            const hoy = new Date();
+            const cierreMes = (fechaCierre.getMonth() === hoy.getMonth()) && (fechaCierre.getFullYear() === hoy.getFullYear());
+            if (fechaCierre < hoy) {
+                return { 'backgroundColor': '#f8d7da' };
+            } else if (cierreMes) {
+                return { 'backgroundColor': '#fff3cd' };
+            } else {
+                return { 'backgroundColor': '#d4edda' };
+            }
+        }
+        """)
+
+        # Configurar AgGrid
+        gb = GridOptionsBuilder.from_dataframe(df_mostrar)
+        gb.configure_column("Fecha de Cierre", cellStyle=cell_style_jscode)
+        gb.configure_column("Título", cellRenderer="htmlRenderer")
+        grid_options = gb.build()
+
+        # Renderizar con AgGrid
+        AgGrid(df_mostrar, gridOptions=grid_options, enable_enterprise_modules=False, height=500, allow_unsafe_jscode=True)
 
     with tab2:
         with st.expander("📊 Filtros Dashboard"):

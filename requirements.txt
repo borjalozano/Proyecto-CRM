@@ -8,3 +8,4 @@ yagmail
 plotly
 matplotlib
 tabulate
+streamlit-aggrid
