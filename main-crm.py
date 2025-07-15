@@ -11,7 +11,12 @@ st.title("🔍 Revisión Semanal del Pipeline CRM")
 
 # --- CARGA DEL ARCHIVO EXCEL ---
 st.sidebar.header("📤 Carga de Export")
+
 uploaded_file = st.sidebar.file_uploader("Sube el Excel exportado desde BHZ", type=["xlsx"])
+st.sidebar.markdown("**🎨 Leyenda de colores:**  \n"
+                    "- 🔴 Rojo: Oferta atrasada  \n"
+                    "- 🟡 Amarillo: Cierre este mes  \n"
+                    "- 🟢 Verde: Cierre futuro")
 
 
 # --- Definición de pestañas ---
@@ -68,10 +73,6 @@ if uploaded_file:
             with col3:
                 clientes = st.multiselect("Cliente", df.cliente.unique(), default=df.cliente.unique())
 
-            st.markdown("**🎨 Leyenda de colores:**  \n"
-                        "- 🔴 Rojo: Oferta atrasada  \n"
-                        "- 🟡 Amarillo: Cierre este mes  \n"
-                        "- 🟢 Verde: Cierre futuro")
 
             df = df[
                 df.estado_oportunidad.isin(estado) &
