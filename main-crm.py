@@ -369,11 +369,10 @@ if uploaded_file:
 
                     top_5 = df_vivas[df_vivas["Predicción"] == 1].head(5)
                     resumen_top = "\n".join(
-                        f"- {row['Título']} (Cliente: {row['Cliente']}, Responsable: {row['Responsable']}, Prob. ajustada: {row['Probabilidad Ajustada']})"
+                        f"- {row['Título']} (Cliente: {row['Cliente']}, Responsable: {row['Responsable']}, Cierre: {row['Fecha Cierre Oportunidad'].date()}, Prob. ajustada: {row['Probabilidad Ajustada']})"
                         for _, row in top_5.iterrows()
                     )
 
-                    # Análisis adicional por cliente
                     top_clientes_prob = df_vivas[df_vivas["Predicción"] == 1]["Cliente"].value_counts().head(5)
                     resumen_clientes = "\n".join(
                         f"- {cliente}: {count} oportunidades ganadas predichas"
@@ -392,7 +391,8 @@ Las 5 oportunidades más prometedoras según el modelo son:
 {resumen_top}
 
 📌 Observación: El cliente más frecuente entre estas oportunidades es **{top_clientes}**, y el responsable con más presencia es **{top_responsables}**.
-\n📊 Clientes destacados con más oportunidades ganadas según el modelo:
+
+📊 Clientes destacados con más oportunidades ganadas según el modelo:
 {resumen_clientes}
 """
 
