@@ -20,7 +20,7 @@ st.sidebar.markdown("**🎨 Leyenda de colores:**  \n"
 
 
 # --- Definición de pestañas ---
-tab1, tab2, tab3 = st.tabs(["📋 Tabla", "📊 Dashboard", "🤖 Análisis IA"])
+tab1, tab2, tab3 = st.tabs(["📋 Tabla", "📊 Dashboard", "📈 Análisis Predictivo"])
 
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
