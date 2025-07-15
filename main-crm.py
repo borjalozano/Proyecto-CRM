@@ -211,8 +211,12 @@ if uploaded_file:
             df_hist_full = pd.read_excel(hist_file)
 
             model_option = st.selectbox("Selecciona el modelo a aplicar", ["Random Forest (v1)"])
-
             if model_option == "Random Forest (v1)":
+                st.info(
+                    "🌳 **Random Forest (v1)**: Este modelo está basado en múltiples árboles de decisión entrenados "
+                    "sobre distintas combinaciones de datos. Evalúa factores como importe, probabilidad, tipo de servicio y responsable, "
+                    "para estimar si una oportunidad se ganará o no. Es robusto ante ruido y útil cuando se combinan variables categóricas y numéricas."
+                )
                 # Preparar etiquetas
                 df_hist_full["estado_objetivo"] = df_hist_full["Estado Oportunidad"].str.lower().map({
                     "ganada": 1,
