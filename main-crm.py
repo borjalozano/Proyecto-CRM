@@ -83,6 +83,8 @@ if uploaded_file:
     # --- BACKLOG POR AÑO ---
     st.markdown("#### 📊 Backlog Proyectado")
     backlog_cols = ["backlog_2025", "backlog_2026", "backlog_2027", "backlog_2028"]
+
+    # Convertir a numérico antes de usar en cualquier parte
     for col in backlog_cols:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
