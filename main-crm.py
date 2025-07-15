@@ -142,6 +142,17 @@ if uploaded_file:
         styled_table = df_mostrar.style.apply(lambda row: [row_style(row)] * len(row), axis=1)
         st.write(styled_table.to_html(escape=False, index=False), unsafe_allow_html=True)
 
+        # --- RESUMEN GENERADO CON IA ---
+        import openai
+        with st.expander("🧠 Resumen generado con IA"):
+            resumen = f"""
+            Se han analizado {len(df_mostrar)} oportunidades activas tras aplicar filtros.
+            El importe total visible en pantalla es de {df_mostrar['Importe'].str.replace('$','').str.replace('.','').astype(float).sum():,.0f} CLP.
+            Las oportunidades con cierre dentro del mes en curso ascienden a aproximadamente {sum(df_mostrar['Fecha de Cierre'].dt.month == dt.datetime.today().month)}.
+            El promedio de probabilidad declarada es de {pd.to_numeric(df_mostrar['Probabilidad'].str.replace('%','')).mean():.1f}%.
+            """
+            st.markdown(resumen)
+
     with tab2:
         with st.expander("📊 Filtros Dashboard"):
             col1, col2, col3 = st.columns(3)
