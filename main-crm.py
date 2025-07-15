@@ -69,6 +69,31 @@ if uploaded_file:
     df = df[df.acuerdo_marco.str.lower() != "sí"]
 
     with tab1:
+        # --- RESUMEN GENERADO CON IA ---
+        import openai
+
+        st.subheader("🧠 Análisis generado por IA")
+
+        resumen = f"""
+Se han cargado {len(df_mostrar)} oportunidades.
+El importe total visible es de {df_mostrar['Importe'].str.replace('$','').str.replace('.','').astype(float).sum():,.0f} CLP.
+Hay {sum(df_mostrar['Fecha de Cierre'].dt.month == dt.datetime.today().month)} oportunidades con cierre este mes.
+El promedio de probabilidad declarada es de {pd.to_numeric(df_mostrar['Probabilidad'].str.replace('%','')).mean():.1f}%.
+"""
+
+        if "OPENAI_API_KEY" in st.secrets:
+            openai.api_key = st.secrets["OPENAI_API_KEY"]
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "Eres un asistente experto en análisis de oportunidades comerciales. Tu tarea es interpretar datos y sugerir insights estratégicos."},
+                    {"role": "user", "content": f"Con base en este resumen del pipeline: {resumen}, ¿qué observaciones clave destacarías?"}
+                ]
+            )
+            st.markdown(response["choices"][0]["message"]["content"])
+        else:
+            st.warning("No se ha configurado la API key de OpenAI. Agrega OPENAI_API_KEY a tus secretos.")
+
         # --- PANEL DE FILTROS ---
         with st.expander("📊 Filtros"):
             col1, col2, col3 = st.columns(3)
@@ -78,7 +103,6 @@ if uploaded_file:
                 responsables = st.multiselect("Responsable", df.responsable.unique(), default=df.responsable.unique())
             with col3:
                 clientes = st.multiselect("Cliente", df.cliente.unique(), default=df.cliente.unique())
-
 
             df = df[
                 df.estado_oportunidad.isin(estado) &
@@ -142,16 +166,6 @@ if uploaded_file:
         styled_table = df_mostrar.style.apply(lambda row: [row_style(row)] * len(row), axis=1)
         st.write(styled_table.to_html(escape=False, index=False), unsafe_allow_html=True)
 
-        # --- RESUMEN GENERADO CON IA ---
-        import openai
-        with st.expander("🧠 Resumen generado con IA"):
-            resumen = f"""
-            Se han analizado {len(df_mostrar)} oportunidades activas tras aplicar filtros.
-            El importe total visible en pantalla es de {df_mostrar['Importe'].str.replace('$','').str.replace('.','').astype(float).sum():,.0f} CLP.
-            Las oportunidades con cierre dentro del mes en curso ascienden a aproximadamente {sum(df_mostrar['Fecha de Cierre'].dt.month == dt.datetime.today().month)}.
-            El promedio de probabilidad declarada es de {pd.to_numeric(df_mostrar['Probabilidad'].str.replace('%','')).mean():.1f}%.
-            """
-            st.markdown(resumen)
 
     with tab2:
         with st.expander("📊 Filtros Dashboard"):
