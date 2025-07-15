@@ -68,6 +68,11 @@ if uploaded_file:
             with col3:
                 clientes = st.multiselect("Cliente", df.cliente.unique(), default=df.cliente.unique())
 
+            st.markdown("**🎨 Leyenda de colores:**  \n"
+                        "- 🔴 Rojo: Oferta atrasada  \n"
+                        "- 🟡 Amarillo: Cierre este mes  \n"
+                        "- 🟢 Verde: Cierre futuro")
+
             df = df[
                 df.estado_oportunidad.isin(estado) &
                 df.responsable.isin(responsables) &
@@ -119,12 +124,14 @@ if uploaded_file:
 
         # Mostrar como tabla HTML con enlaces y colorear filas
         def row_style(row):
-            if row["Fecha de Cierre"].month == dt.datetime.today().month and row["Fecha de Cierre"].year == dt.datetime.today().year:
-                return 'background-color: #fff3cd'  # Naranja claro
+            if pd.isnull(row["Fecha de Cierre"]):
+                return ''
             elif row["Fecha de Cierre"] < dt.datetime.today():
                 return 'background-color: #f8d7da'  # Rojo claro
+            elif row["Fecha de Cierre"].month == dt.datetime.today().month and row["Fecha de Cierre"].year == dt.datetime.today().year:
+                return 'background-color: #fff3cd'  # Amarillo claro
             else:
-                return ''
+                return 'background-color: #d4edda'  # Verde claro
         styled_table = df_mostrar.style.apply(lambda row: [row_style(row)] * len(row), axis=1)
         st.write(styled_table.to_html(escape=False, index=False), unsafe_allow_html=True)
 
