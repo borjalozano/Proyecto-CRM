@@ -140,7 +140,7 @@ if uploaded_file:
                     st.warning("No se ha configurado la API key de OpenAI. Agrega OPENAI_API_KEY a tus secretos.")
 
         # --- DATATABLE ---
-        st.subheader("📋 Oportunidades filtradas")
+        st.subheader("📋 Oportunidades")
 
         # Mostrar como tabla HTML con enlaces y colorear filas
         def row_style(row):
